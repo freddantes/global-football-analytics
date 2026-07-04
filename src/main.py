@@ -35,9 +35,18 @@ def run_pipeline():
         # Cria o DataFrame
         df = pd.DataFrame(standings)
         
-        # Garante a pasta e salva
+        # Achatamento (Flattening) da coluna 'team'
+        df_team = pd.json_normalize(df['team'])
+        
+        # Renomeia colunas para evitar conflitos (opcional, mas recomendado)
+        df_team = df_team.add_prefix('team_')
+        
+        # Concatena e remove a coluna original
+        df_final = pd.concat([df.drop(columns=['team']), df_team], axis=1)
+        
+        # Salva o parquet refinado
         os.makedirs("data/gold", exist_ok=True)
-        df.to_parquet("data/gold/kpis.parquet")
+        df_final.to_parquet("data/gold/kpis.parquet")
         print("Pipeline executado com sucesso! Dados reais salvos em data/gold/kpis.parquet")
     else:
         print(f"Erro ao acessar API: {response.status_code}")
