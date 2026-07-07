@@ -1,0 +1,7 @@
+pandas
+requests
+streamlit
+fastapi
+uvicorn
+python-dotenv
+pyarrow
