@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import requests
 import os
+import plotly.express as px
 
 st.set_page_config(page_title="Dashboard Global de Futebol", layout="wide")
 
@@ -17,10 +18,8 @@ st.markdown("---")
 def fetch_data(league_code):
     api_key = st.secrets.get("API_KEY")
     if not api_key: return None
-        
     url = f"https://api.football-data.org/v4/competitions/{league_code}/standings"
     headers = {"X-Auth-Token": api_key}
-    
     response = requests.get(url, headers=headers)
     if response.status_code == 200:
         data = response.json()
@@ -33,33 +32,49 @@ def fetch_data(league_code):
 def load_data(league_code):
     base_dir = os.path.dirname(os.path.abspath(__file__))
     file_path = os.path.join(base_dir, "data", "gold", f"{league_code}.parquet")
-    
     if os.path.exists(file_path):
         return pd.read_parquet(file_path)
     else:
         return fetch_data(league_code)
 
+# Sidebar
 selected_league_name = st.sidebar.selectbox("Selecione a Competição:", list(LEAGUES.keys()))
 league_code = LEAGUES[selected_league_name]
-
 df = load_data(league_code)
 
 if df is not None:
+    # --- HERO SECTION ---
     team_list = sorted(df['team_name'].unique())
-    selected_team = st.sidebar.selectbox("Selecione o Time:", team_list)
-    
+    selected_team = st.sidebar.selectbox("Selecione o Time para Destaque:", team_list)
     filtered_df = df[df['team_name'] == selected_team]
     
-    col1, col2 = st.columns([1, 4])
-    with col1:
-        st.image(filtered_df['team_crest'].values[0], width=150)
-    with col2:
-        st.subheader(f"Perfil: {selected_team}")
-        c1, c2, c3 = st.columns(3)
-        c1.metric("Pontos", int(filtered_df['points'].values[0]))
-        c2.metric("Jogos", int(filtered_df['playedGames'].values[0]))
-        c3.metric("Saldo", int(filtered_df['goalDifference'].values[0]))
-        
-    st.dataframe(filtered_df, use_container_width=True)
+    with st.container():
+        col_img, col_info = st.columns([1, 4])
+        with col_img:
+            st.image(filtered_df['team_crest'].values[0], width=200)
+        with col_info:
+            st.title(selected_team)
+            c1, c2, c3, c4 = st.columns(4)
+            c1.metric("Posição", int(filtered_df['position'].values[0]))
+            c2.metric("Pontos", int(filtered_df['points'].values[0]))
+            c3.metric("Vitórias", int(filtered_df['won'].values[0]))
+            c4.metric("Saldo", int(filtered_df['goalDifference'].values[0]))
+
+    st.markdown("---")
+
+    # --- VISUALIZAÇÃO GRÁFICA ---
+    st.subheader("Comparativo de Pontuação")
+    fig = px.bar(df.sort_values('points', ascending=False), 
+                 x='team_name', y='points', 
+                 color='points', color_continuous_scale='Blues')
+    st.plotly_chart(fig, use_container_width=True)
+
+    # --- EXPLORER SECTION ---
+    st.subheader(f"Classificação Completa: {selected_league_name}")
+    st.dataframe(
+        df[['position', 'team_name', 'playedGames', 'won', 'draw', 'lost', 'points', 'goalDifference']], 
+        use_container_width=True,
+        hide_index=True
+    )
 else:
     st.error("Não foi possível carregar os dados. Verifique a API_KEY.")
