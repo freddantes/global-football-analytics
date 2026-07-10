@@ -26,7 +26,11 @@ def fetch_data(league_code):
         all_groups = [pd.DataFrame(stage['table']) for stage in data['standings'] if 'table' in stage]
         df = pd.concat(all_groups, ignore_index=True)
         df_team = pd.json_normalize(df['team']).add_prefix('team_')
-        return pd.concat([df.drop(columns=['team']), df_team], axis=1)
+        df_final = pd.concat([df.drop(columns=['team']), df_team], axis=1)
+        # Recalcula métricas caso venha via API direta
+        df_final['goals_per_game'] = (df_final['goalsFor'] / df_final['playedGames']).fillna(0).round(2)
+        df_final['points_pct'] = (df_final['points'] / (df_final['playedGames'] * 3)).fillna(0).round(2)
+        return df_final
     return None
 
 def load_data(league_code):
@@ -37,13 +41,11 @@ def load_data(league_code):
     else:
         return fetch_data(league_code)
 
-# Sidebar
 selected_league_name = st.sidebar.selectbox("Selecione a Competição:", list(LEAGUES.keys()))
 league_code = LEAGUES[selected_league_name]
 df = load_data(league_code)
 
 if df is not None:
-    # --- HERO SECTION ---
     team_list = sorted(df['team_name'].unique())
     selected_team = st.sidebar.selectbox("Selecione o Time para Destaque:", team_list)
     filtered_df = df[df['team_name'] == selected_team]
@@ -55,26 +57,22 @@ if df is not None:
         with col_info:
             st.title(selected_team)
             c1, c2, c3, c4 = st.columns(4)
-            c1.metric("Posição", int(filtered_df['position'].values[0]))
-            c2.metric("Pontos", int(filtered_df['points'].values[0]))
-            c3.metric("Vitórias", int(filtered_df['won'].values[0]))
-            c4.metric("Saldo", int(filtered_df['goalDifference'].values[0]))
+            c1.metric("Pontos", int(filtered_df['points'].values[0]))
+            c2.metric("Gols/Jogo", filtered_df['goals_per_game'].values[0])
+            c3.metric("Aproveitamento", f"{int(filtered_df['points_pct'].values[0]*100)}%")
+            c4.metric("Saldo de Gols", int(filtered_df['goalDifference'].values[0]))
 
     st.markdown("---")
-
-    # --- VISUALIZAÇÃO GRÁFICA ---
     st.subheader("Comparativo de Pontuação")
     fig = px.bar(df.sort_values('points', ascending=False), 
                  x='team_name', y='points', 
                  color='points', color_continuous_scale='Blues')
     st.plotly_chart(fig, use_container_width=True)
 
-    # --- EXPLORER SECTION ---
     st.subheader(f"Classificação Completa: {selected_league_name}")
     st.dataframe(
-        df[['position', 'team_name', 'playedGames', 'won', 'draw', 'lost', 'points', 'goalDifference']], 
-        use_container_width=True,
-        hide_index=True
+        df[['position', 'team_name', 'playedGames', 'won', 'draw', 'lost', 'points', 'goalDifference', 'goals_per_game']], 
+        use_container_width=True, hide_index=True
     )
 else:
     st.error("Não foi possível carregar os dados. Verifique a API_KEY.")

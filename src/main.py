@@ -38,7 +38,6 @@ def run_pipeline():
             if response.status_code == 200:
                 data = response.json()
                 if 'standings' in data and data['standings']:
-                    # Agrega todos os grupos/stages disponíveis
                     all_groups = []
                     for stage in data['standings']:
                         if 'table' in stage:
@@ -53,8 +52,12 @@ def run_pipeline():
                         else:
                             df_final = df
                         
+                        # --- CÁLCULO DE MÉTRICAS ANALÍTICAS ---
+                        df_final['goals_per_game'] = (df_final['goalsFor'] / df_final['playedGames']).fillna(0).round(2)
+                        df_final['points_pct'] = (df_final['points'] / (df_final['playedGames'] * 3)).fillna(0).round(2)
+                        
                         df_final.to_parquet(f"data/gold/{code}.parquet")
-                        print(f"Sucesso: {name} salvo.")
+                        print(f"Sucesso: {name} salvo com métricas.")
                     else:
                         print(f"Aviso: Tabela vazia para {name}")
                 else:
