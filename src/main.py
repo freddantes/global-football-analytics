@@ -1,6 +1,7 @@
 import pandas as pd
 import requests
 import os
+from datetime import datetime
 from dotenv import load_dotenv
 from pathlib import Path
 
@@ -22,11 +23,14 @@ LEAGUES = {
 def run_pipeline():
     api_key = os.getenv("API_KEY")
     base_url = os.getenv("API_BASE_URL")
+    today = datetime.now().strftime("%Y-%m-%d")
     
     if not api_key:
         raise ValueError("API_KEY não encontrada!")
 
-    os.makedirs("data/gold", exist_ok=True)
+    # Cria pasta com a data de hoje para versionamento
+    target_dir = f"data/gold/{today}"
+    os.makedirs(target_dir, exist_ok=True)
 
     for name, code in LEAGUES.items():
         print(f"Processando: {name} ({code})...")
@@ -52,12 +56,13 @@ def run_pipeline():
                         else:
                             df_final = df
                         
-                        # --- CÁLCULO DE MÉTRICAS ANALÍTICAS ---
+                        # Cálculo de métricas
                         df_final['goals_per_game'] = (df_final['goalsFor'] / df_final['playedGames']).fillna(0).round(2)
                         df_final['points_pct'] = (df_final['points'] / (df_final['playedGames'] * 3)).fillna(0).round(2)
                         
-                        df_final.to_parquet(f"data/gold/{code}.parquet")
-                        print(f"Sucesso: {name} salvo com métricas.")
+                        # Salva arquivo versionado pela data
+                        df_final.to_parquet(f"{target_dir}/{code}_{today}.parquet")
+                        print(f"Sucesso: {name} salvo em {target_dir}")
                     else:
                         print(f"Aviso: Tabela vazia para {name}")
                 else:

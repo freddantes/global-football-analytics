@@ -27,23 +27,27 @@ def fetch_data(league_code):
         df = pd.concat(all_groups, ignore_index=True)
         df_team = pd.json_normalize(df['team']).add_prefix('team_')
         df_final = pd.concat([df.drop(columns=['team']), df_team], axis=1)
-        # Recalcula métricas caso venha via API direta
         df_final['goals_per_game'] = (df_final['goalsFor'] / df_final['playedGames']).fillna(0).round(2)
         df_final['points_pct'] = (df_final['points'] / (df_final['playedGames'] * 3)).fillna(0).round(2)
         return df_final
     return None
 
-def load_data(league_code):
-    base_dir = os.path.dirname(os.path.abspath(__file__))
-    file_path = os.path.join(base_dir, "data", "gold", f"{league_code}.parquet")
-    if os.path.exists(file_path):
-        return pd.read_parquet(file_path)
-    else:
-        return fetch_data(league_code)
+def get_latest_data(league_code):
+    base_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "gold")
+    if not os.path.exists(base_dir): return fetch_data(league_code)
+    
+    # Lista pastas de datas e pega a mais recente
+    dates = sorted([d for d in os.listdir(base_dir) if os.path.isdir(os.path.join(base_dir, d))], reverse=True)
+    
+    for date in dates:
+        file_path = os.path.join(base_dir, date, f"{league_code}_{date}.parquet")
+        if os.path.exists(file_path):
+            return pd.read_parquet(file_path)
+    return fetch_data(league_code)
 
 selected_league_name = st.sidebar.selectbox("Selecione a Competição:", list(LEAGUES.keys()))
 league_code = LEAGUES[selected_league_name]
-df = load_data(league_code)
+df = get_latest_data(league_code)
 
 if df is not None:
     team_list = sorted(df['team_name'].unique())
