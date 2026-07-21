@@ -4,8 +4,15 @@ from src.logging_config import logger
 
 def process_standings(raw_data: dict) -> pd.DataFrame:
     try:
-        # Lógica atual de extração do JSON da API para extrair a tabela
-        standings_list = raw_data['standings'][0]['table']
+        # Verifica se os dados de standings estão vazios ou ausentes
+        standings = raw_data.get('standings')
+        if not standings or len(standings) == 0:
+            logger.warning("Nenhum dado de classificação encontrado no payload.")
+            return None
+
+        standings_list = standings[0].get('table', [])
+        if not standings_list:
+            return None
         
         processed_data = []
         for row in standings_list:
@@ -27,9 +34,18 @@ def process_standings(raw_data: dict) -> pd.DataFrame:
             processed_data.append(validated_row.model_dump())
             
         df = pd.DataFrame(processed_data)
-        logger.info("Contrato de dados validado com sucesso para a tabela.")
+        
+        # Recria a coluna adicional esperada pelo teste unitário
+        if 'playedGames' in df.columns and 'goalsFor' in df.columns:
+            # Evita divisão por zero caso playedGames seja 0
+            df['goals_per_game'] = df.apply(
+                lambda x: x['goalsFor'] / x['playedGames'] if x['playedGames'] > 0 else 0.0, 
+                axis=1
+            )
+
+        logger.info("Contrato de dados validado com sucesso e DataFrame processado.")
         return df
 
     except Exception as e:
-        logger.error(f"Falha na validação do contrato de dados: {e}")
+        logger.error(f"Falha na validação do contrato de dados ou transformação: {e}")
         raise e
