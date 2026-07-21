@@ -1,6 +1,6 @@
 # Global Football Analytics Pipeline ⚽
 
-[![Python Tests](https://github.com/freddantes/premier-league-analytics/actions/workflows/tests.yml/badge.svg)](https://github.com/freddantes/premier-league-analytics/actions/workflows/tests.yml)
+[![Python Tests](https://github.com/freddantes/global-football-analytics/actions/workflows/tests.yml/badge.svg)](https://github.com/freddantes/global-football-analytics/actions/workflows/tests.yml)
 
 A professional-grade, automated data pipeline and dashboard designed to extract, transform, and analyze football data from multiple global competitions. Built with a focus on modularity, data quality, and scalability.
 
@@ -24,7 +24,7 @@ This project follows a professional **ETL (Extract, Transform, Load)** pattern:
 - **Automation/Testing:** `pytest`, GitHub Actions
 
 ## 📋 Local Setup
-1. **Clone the repository:** `git clone https://github.com/freddantes/premier-league-analytics.git`
+1. **Clone the repository:** `git clone https://github.com/freddantes/global-football-analytics.git`
 2. **Install dependencies:** `pip install -r requirements.txt`
 3. **Configure Environment:** Create a `.env` file with your `API_KEY`.
 4. **Run Pipeline:** `python -m src.main`
