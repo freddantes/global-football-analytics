@@ -35,11 +35,21 @@ def process_standings(raw_data: dict) -> pd.DataFrame:
             
         df = pd.DataFrame(processed_data)
         
-        # Recria a coluna adicional esperada pelo teste unitário
+        # Ajusta o nome da coluna para atender ao teste unitário existente ('team_name')
+        if 'team' in df.columns:
+            df = df.rename(columns={'team': 'team_name'})
+        
+        # Recria as colunas adicionais esperadas pelos testes unitários
         if 'playedGames' in df.columns and 'goalsFor' in df.columns:
-            # Evita divisão por zero caso playedGames seja 0
             df['goals_per_game'] = df.apply(
                 lambda x: x['goalsFor'] / x['playedGames'] if x['playedGames'] > 0 else 0.0, 
+                axis=1
+            )
+            
+        if 'playedGames' in df.columns and 'points' in df.columns:
+            # Aproveitamento em formato decimal (ex: 18 / 30 = 0.6)
+            df['points_pct'] = df.apply(
+                lambda x: x['points'] / (x['playedGames'] * 3) if x['playedGames'] > 0 else 0.0, 
                 axis=1
             )
 
