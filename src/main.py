@@ -6,7 +6,7 @@ from pathlib import Path
 # Importação dos módulos do pipeline e da configuração de log
 from src.extract import get_league_data
 from src.transform import process_standings
-from src.load import save_data
+from src.load import save_data, save_consolidated_data
 from src.logging_config import logger
 
 # Carrega as variáveis de ambiente
@@ -35,6 +35,8 @@ def run_pipeline():
         logger.error("API_KEY não encontrada nas variáveis de ambiente.")
         return
 
+    processed_dfs = []
+
     for name, code in LEAGUES.items():
         logger.info(f"Processando liga: {name} ({code})")
         try:
@@ -46,13 +48,23 @@ def run_pipeline():
             
             # 3. LOAD
             if df is not None:
+                # Adicionamos metadados da competição para permitir a consolidação e filtros futuros
+                df['league_code'] = code
+                df['league_name'] = name
+                
                 save_data(df, code, today)
+                processed_dfs.append(df)
                 logger.info(f"Sucesso: Dados de {name} salvos com sucesso.")
             else:
                 logger.warning(f"Aviso: Nenhuma tabela encontrada para {name}.")
                 
         except Exception as e:
             logger.error(f"Falha crítica ao processar {name}: {e}")
+
+    # Gera o arquivo consolidado na raiz de data/gold para a API FastAPI consumir
+    if processed_dfs:
+        save_consolidated_data(processed_dfs)
+        logger.info("Consolidação dos KPIs finalizada com sucesso.")
 
     logger.info("Pipeline finalizado.")
 
