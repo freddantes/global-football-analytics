@@ -1,0 +1,470 @@
+2026-07-17 21:22:50,345 - pipeline - INFO - Iniciando execução do pipeline de dados.
+2026-07-17 21:22:50,346 - pipeline - INFO - Processando liga: Premier League (PL)
+2026-07-17 21:22:51,876 - pipeline - INFO - Sucesso: Dados de Premier League salvos com sucesso.
+2026-07-17 21:22:51,877 - pipeline - INFO - Processando liga: Copa do Mundo (WC)
+2026-07-17 21:22:52,590 - pipeline - INFO - Sucesso: Dados de Copa do Mundo salvos com sucesso.
+2026-07-17 21:22:52,591 - pipeline - INFO - Processando liga: Champions League (CL)
+2026-07-17 21:22:53,340 - pipeline - INFO - Sucesso: Dados de Champions League salvos com sucesso.
+2026-07-17 21:22:53,340 - pipeline - INFO - Processando liga: Mundial de Clubes (FCWC)
+2026-07-17 21:22:54,058 - pipeline - ERROR - Falha crítica ao processar Mundial de Clubes: 403 Client Error:  for url: https://api.football-data.org/v4/competitions/FCWC/standings
+2026-07-17 21:22:54,060 - pipeline - INFO - Processando liga: Libertadores (CLI)
+2026-07-17 21:22:54,823 - pipeline - INFO - Sucesso: Dados de Libertadores salvos com sucesso.
+2026-07-17 21:22:54,824 - pipeline - INFO - Processando liga: Brasileirão Série A (BSA)
+2026-07-17 21:22:55,501 - pipeline - INFO - Sucesso: Dados de Brasileirão Série A salvos com sucesso.
+2026-07-17 21:22:55,501 - pipeline - INFO - Processando liga: La Liga (PD)
+2026-07-17 21:22:56,213 - pipeline - INFO - Sucesso: Dados de La Liga salvos com sucesso.
+2026-07-17 21:22:56,214 - pipeline - INFO - Processando liga: Ligue 1 (FL1)
+2026-07-17 21:22:56,915 - pipeline - INFO - Sucesso: Dados de Ligue 1 salvos com sucesso.
+2026-07-17 21:22:56,915 - pipeline - INFO - Processando liga: Serie A Italiana (SA)
+2026-07-17 21:22:57,615 - pipeline - INFO - Sucesso: Dados de Serie A Italiana salvos com sucesso.
+2026-07-17 21:22:57,616 - pipeline - INFO - Processando liga: Bundesliga (BL1)
+2026-07-17 21:22:58,347 - pipeline - INFO - Sucesso: Dados de Bundesliga salvos com sucesso.
+2026-07-17 21:22:58,347 - pipeline - INFO - Pipeline finalizado.
+2026-07-22 00:22:15,830 - pipeline - INFO - Iniciando execução do pipeline de dados.
+2026-07-22 00:22:15,831 - pipeline - INFO - Processando liga: Premier League (PL)
+2026-07-22 00:22:15,831 - pipeline - INFO - Tentativa 1 de 3 para a URL: PL
+2026-07-22 00:22:15,836 - pipeline - ERROR - Falha crítica ao processar Premier League: Invalid URL 'PL': No scheme supplied. Perhaps you meant https://PL?
+2026-07-22 00:22:15,837 - pipeline - INFO - Processando liga: Copa do Mundo (WC)
+2026-07-22 00:22:15,837 - pipeline - INFO - Tentativa 1 de 3 para a URL: WC
+2026-07-22 00:22:15,838 - pipeline - ERROR - Falha crítica ao processar Copa do Mundo: Invalid URL 'WC': No scheme supplied. Perhaps you meant https://WC?
+2026-07-22 00:22:15,838 - pipeline - INFO - Processando liga: Champions League (CL)
+2026-07-22 00:22:15,838 - pipeline - INFO - Tentativa 1 de 3 para a URL: CL
+2026-07-22 00:22:15,839 - pipeline - ERROR - Falha crítica ao processar Champions League: Invalid URL 'CL': No scheme supplied. Perhaps you meant https://CL?
+2026-07-22 00:22:15,840 - pipeline - INFO - Processando liga: Mundial de Clubes (FCWC)
+2026-07-22 00:22:15,840 - pipeline - INFO - Tentativa 1 de 3 para a URL: FCWC
+2026-07-22 00:22:15,841 - pipeline - ERROR - Falha crítica ao processar Mundial de Clubes: Invalid URL 'FCWC': No scheme supplied. Perhaps you meant https://FCWC?
+2026-07-22 00:22:15,842 - pipeline - INFO - Processando liga: Libertadores (CLI)
+2026-07-22 00:22:15,842 - pipeline - INFO - Tentativa 1 de 3 para a URL: CLI
+2026-07-22 00:22:15,843 - pipeline - ERROR - Falha crítica ao processar Libertadores: Invalid URL 'CLI': No scheme supplied. Perhaps you meant https://CLI?
+2026-07-22 00:22:15,843 - pipeline - INFO - Processando liga: Brasileirão Série A (BSA)
+2026-07-22 00:22:15,843 - pipeline - INFO - Tentativa 1 de 3 para a URL: BSA
+2026-07-22 00:22:15,845 - pipeline - ERROR - Falha crítica ao processar Brasileirão Série A: Invalid URL 'BSA': No scheme supplied. Perhaps you meant https://BSA?
+2026-07-22 00:22:15,845 - pipeline - INFO - Processando liga: La Liga (PD)
+2026-07-22 00:22:15,846 - pipeline - INFO - Tentativa 1 de 3 para a URL: PD
+2026-07-22 00:22:15,847 - pipeline - ERROR - Falha crítica ao processar La Liga: Invalid URL 'PD': No scheme supplied. Perhaps you meant https://PD?
+2026-07-22 00:22:15,847 - pipeline - INFO - Processando liga: Ligue 1 (FL1)
+2026-07-22 00:22:15,847 - pipeline - INFO - Tentativa 1 de 3 para a URL: FL1
+2026-07-22 00:22:15,849 - pipeline - ERROR - Falha crítica ao processar Ligue 1: Invalid URL 'FL1': No scheme supplied. Perhaps you meant https://FL1?
+2026-07-22 00:22:15,851 - pipeline - INFO - Processando liga: Serie A Italiana (SA)
+2026-07-22 00:22:15,853 - pipeline - INFO - Tentativa 1 de 3 para a URL: SA
+2026-07-22 00:22:15,855 - pipeline - ERROR - Falha crítica ao processar Serie A Italiana: Invalid URL 'SA': No scheme supplied. Perhaps you meant https://SA?
+2026-07-22 00:22:15,855 - pipeline - INFO - Processando liga: Bundesliga (BL1)
+2026-07-22 00:22:15,855 - pipeline - INFO - Tentativa 1 de 3 para a URL: BL1
+2026-07-22 00:22:15,857 - pipeline - ERROR - Falha crítica ao processar Bundesliga: Invalid URL 'BL1': No scheme supplied. Perhaps you meant https://BL1?
+2026-07-22 00:22:15,857 - pipeline - INFO - Pipeline finalizado.
+2026-07-22 00:24:00,738 - pipeline - INFO - Iniciando execução do pipeline de dados.
+2026-07-22 00:24:00,738 - pipeline - INFO - Processando liga: Premier League (PL)
+2026-07-22 00:24:00,739 - pipeline - INFO - Tentativa 1 de 3 para a URL: https://api.football-data.org/v4/competitions/PL/standings
+2026-07-22 00:24:00,743 - pipeline - ERROR - Falha crítica ao processar Premier League: 'str' object has no attribute 'items'
+2026-07-22 00:24:00,743 - pipeline - INFO - Processando liga: Copa do Mundo (WC)
+2026-07-22 00:24:00,744 - pipeline - INFO - Tentativa 1 de 3 para a URL: https://api.football-data.org/v4/competitions/WC/standings
+2026-07-22 00:24:00,746 - pipeline - ERROR - Falha crítica ao processar Copa do Mundo: 'str' object has no attribute 'items'
+2026-07-22 00:24:00,747 - pipeline - INFO - Processando liga: Champions League (CL)
+2026-07-22 00:24:00,747 - pipeline - INFO - Tentativa 1 de 3 para a URL: https://api.football-data.org/v4/competitions/CL/standings
+2026-07-22 00:24:00,748 - pipeline - ERROR - Falha crítica ao processar Champions League: 'str' object has no attribute 'items'
+2026-07-22 00:24:00,749 - pipeline - INFO - Processando liga: Mundial de Clubes (FCWC)
+2026-07-22 00:24:00,749 - pipeline - INFO - Tentativa 1 de 3 para a URL: https://api.football-data.org/v4/competitions/FCWC/standings
+2026-07-22 00:24:00,750 - pipeline - ERROR - Falha crítica ao processar Mundial de Clubes: 'str' object has no attribute 'items'
+2026-07-22 00:24:00,750 - pipeline - INFO - Processando liga: Libertadores (CLI)
+2026-07-22 00:24:00,751 - pipeline - INFO - Tentativa 1 de 3 para a URL: https://api.football-data.org/v4/competitions/CLI/standings
+2026-07-22 00:24:00,752 - pipeline - ERROR - Falha crítica ao processar Libertadores: 'str' object has no attribute 'items'
+2026-07-22 00:24:00,753 - pipeline - INFO - Processando liga: Brasileirão Série A (BSA)
+2026-07-22 00:24:00,753 - pipeline - INFO - Tentativa 1 de 3 para a URL: https://api.football-data.org/v4/competitions/BSA/standings
+2026-07-22 00:24:00,755 - pipeline - ERROR - Falha crítica ao processar Brasileirão Série A: 'str' object has no attribute 'items'
+2026-07-22 00:24:00,755 - pipeline - INFO - Processando liga: La Liga (PD)
+2026-07-22 00:24:00,756 - pipeline - INFO - Tentativa 1 de 3 para a URL: https://api.football-data.org/v4/competitions/PD/standings
+2026-07-22 00:24:00,757 - pipeline - ERROR - Falha crítica ao processar La Liga: 'str' object has no attribute 'items'
+2026-07-22 00:24:00,757 - pipeline - INFO - Processando liga: Ligue 1 (FL1)
+2026-07-22 00:24:00,758 - pipeline - INFO - Tentativa 1 de 3 para a URL: https://api.football-data.org/v4/competitions/FL1/standings
+2026-07-22 00:24:00,760 - pipeline - ERROR - Falha crítica ao processar Ligue 1: 'str' object has no attribute 'items'
+2026-07-22 00:24:00,760 - pipeline - INFO - Processando liga: Serie A Italiana (SA)
+2026-07-22 00:24:00,761 - pipeline - INFO - Tentativa 1 de 3 para a URL: https://api.football-data.org/v4/competitions/SA/standings
+2026-07-22 00:24:00,762 - pipeline - ERROR - Falha crítica ao processar Serie A Italiana: 'str' object has no attribute 'items'
+2026-07-22 00:24:00,763 - pipeline - INFO - Processando liga: Bundesliga (BL1)
+2026-07-22 00:24:00,763 - pipeline - INFO - Tentativa 1 de 3 para a URL: https://api.football-data.org/v4/competitions/BL1/standings
+2026-07-22 00:24:00,764 - pipeline - ERROR - Falha crítica ao processar Bundesliga: 'str' object has no attribute 'items'
+2026-07-22 00:24:00,765 - pipeline - INFO - Pipeline finalizado.
+2026-07-22 00:25:06,863 - pipeline - INFO - Iniciando execução do pipeline de dados.
+2026-07-22 00:25:06,863 - pipeline - INFO - Processando liga: Premier League (PL)
+2026-07-22 00:25:06,864 - pipeline - INFO - Tentativa 1 de 3 para a URL: https://api.football-data.org/v4/competitions/PL/standings
+2026-07-22 00:25:08,428 - pipeline - ERROR - Erro fatal na requisição. Status code: 403 - Resposta: {"message":"The resource you are looking for is restricted and apparently not within your permissions. Please check your subscription.","errorCode":403}
+2026-07-22 00:25:08,428 - pipeline - ERROR - Falha crítica ao processar Premier League: 403 Client Error:  for url: https://api.football-data.org/v4/competitions/PL/standings
+2026-07-22 00:25:08,430 - pipeline - INFO - Processando liga: Copa do Mundo (WC)
+2026-07-22 00:25:08,430 - pipeline - INFO - Tentativa 1 de 3 para a URL: https://api.football-data.org/v4/competitions/WC/standings
+2026-07-22 00:25:09,275 - pipeline - ERROR - Erro fatal na requisição. Status code: 403 - Resposta: {"message":"The resource you are looking for is restricted and apparently not within your permissions. Please check your subscription.","errorCode":403}
+2026-07-22 00:25:09,276 - pipeline - ERROR - Falha crítica ao processar Copa do Mundo: 403 Client Error:  for url: https://api.football-data.org/v4/competitions/WC/standings
+2026-07-22 00:25:09,277 - pipeline - INFO - Processando liga: Champions League (CL)
+2026-07-22 00:25:09,277 - pipeline - INFO - Tentativa 1 de 3 para a URL: https://api.football-data.org/v4/competitions/CL/standings
+2026-07-22 00:25:09,973 - pipeline - ERROR - Erro fatal na requisição. Status code: 403 - Resposta: {"message":"The resource you are looking for is restricted and apparently not within your permissions. Please check your subscription.","errorCode":403}
+2026-07-22 00:25:09,973 - pipeline - ERROR - Falha crítica ao processar Champions League: 403 Client Error:  for url: https://api.football-data.org/v4/competitions/CL/standings
+2026-07-22 00:25:09,974 - pipeline - INFO - Processando liga: Mundial de Clubes (FCWC)
+2026-07-22 00:25:09,975 - pipeline - INFO - Tentativa 1 de 3 para a URL: https://api.football-data.org/v4/competitions/FCWC/standings
+2026-07-22 00:25:10,656 - pipeline - ERROR - Erro fatal na requisição. Status code: 403 - Resposta: {"message":"The resource you are looking for is restricted and apparently not within your permissions. Please check your subscription.","errorCode":403}
+2026-07-22 00:25:10,657 - pipeline - ERROR - Falha crítica ao processar Mundial de Clubes: 403 Client Error:  for url: https://api.football-data.org/v4/competitions/FCWC/standings
+2026-07-22 00:25:10,657 - pipeline - INFO - Processando liga: Libertadores (CLI)
+2026-07-22 00:25:10,658 - pipeline - INFO - Tentativa 1 de 3 para a URL: https://api.football-data.org/v4/competitions/CLI/standings
+2026-07-22 00:25:11,425 - pipeline - ERROR - Erro fatal na requisição. Status code: 403 - Resposta: {"message":"The resource you are looking for is restricted and apparently not within your permissions. Please check your subscription.","errorCode":403}
+2026-07-22 00:25:11,426 - pipeline - ERROR - Falha crítica ao processar Libertadores: 403 Client Error:  for url: https://api.football-data.org/v4/competitions/CLI/standings
+2026-07-22 00:25:11,427 - pipeline - INFO - Processando liga: Brasileirão Série A (BSA)
+2026-07-22 00:25:11,427 - pipeline - INFO - Tentativa 1 de 3 para a URL: https://api.football-data.org/v4/competitions/BSA/standings
+2026-07-22 00:25:12,238 - pipeline - ERROR - Erro fatal na requisição. Status code: 403 - Resposta: {"message":"The resource you are looking for is restricted and apparently not within your permissions. Please check your subscription.","errorCode":403}
+2026-07-22 00:25:12,239 - pipeline - ERROR - Falha crítica ao processar Brasileirão Série A: 403 Client Error:  for url: https://api.football-data.org/v4/competitions/BSA/standings
+2026-07-22 00:25:12,240 - pipeline - INFO - Processando liga: La Liga (PD)
+2026-07-22 00:25:12,240 - pipeline - INFO - Tentativa 1 de 3 para a URL: https://api.football-data.org/v4/competitions/PD/standings
+2026-07-22 00:25:12,974 - pipeline - ERROR - Erro fatal na requisição. Status code: 403 - Resposta: {"message":"The resource you are looking for is restricted and apparently not within your permissions. Please check your subscription.","errorCode":403}
+2026-07-22 00:25:12,975 - pipeline - ERROR - Falha crítica ao processar La Liga: 403 Client Error:  for url: https://api.football-data.org/v4/competitions/PD/standings
+2026-07-22 00:25:12,976 - pipeline - INFO - Processando liga: Ligue 1 (FL1)
+2026-07-22 00:25:12,976 - pipeline - INFO - Tentativa 1 de 3 para a URL: https://api.football-data.org/v4/competitions/FL1/standings
+2026-07-22 00:25:13,648 - pipeline - ERROR - Erro fatal na requisição. Status code: 403 - Resposta: {"message":"The resource you are looking for is restricted and apparently not within your permissions. Please check your subscription.","errorCode":403}
+2026-07-22 00:25:13,649 - pipeline - ERROR - Falha crítica ao processar Ligue 1: 403 Client Error:  for url: https://api.football-data.org/v4/competitions/FL1/standings
+2026-07-22 00:25:13,650 - pipeline - INFO - Processando liga: Serie A Italiana (SA)
+2026-07-22 00:25:13,650 - pipeline - INFO - Tentativa 1 de 3 para a URL: https://api.football-data.org/v4/competitions/SA/standings
+2026-07-22 00:25:14,327 - pipeline - ERROR - Erro fatal na requisição. Status code: 403 - Resposta: {"message":"The resource you are looking for is restricted and apparently not within your permissions. Please check your subscription.","errorCode":403}
+2026-07-22 00:25:14,327 - pipeline - ERROR - Falha crítica ao processar Serie A Italiana: 403 Client Error:  for url: https://api.football-data.org/v4/competitions/SA/standings
+2026-07-22 00:25:14,329 - pipeline - INFO - Processando liga: Bundesliga (BL1)
+2026-07-22 00:25:14,329 - pipeline - INFO - Tentativa 1 de 3 para a URL: https://api.football-data.org/v4/competitions/BL1/standings
+2026-07-22 00:25:15,117 - pipeline - ERROR - Erro fatal na requisição. Status code: 403 - Resposta: {"message":"The resource you are looking for is restricted and apparently not within your permissions. Please check your subscription.","errorCode":403}
+2026-07-22 00:25:15,118 - pipeline - ERROR - Falha crítica ao processar Bundesliga: 403 Client Error:  for url: https://api.football-data.org/v4/competitions/BL1/standings
+2026-07-22 00:25:15,119 - pipeline - INFO - Pipeline finalizado.
+2026-07-22 00:28:16,203 - pipeline - INFO - Iniciando execução do pipeline de dados.
+2026-07-22 00:28:16,203 - pipeline - INFO - Processando liga: Premier League (PL)
+2026-07-22 00:28:16,203 - pipeline - INFO - Tentativa 1 de 3 para a URL: https://api.football-data.org/v4/competitions/PL/standings
+2026-07-22 00:28:18,249 - pipeline - INFO - Dados extraídos com sucesso da API.
+2026-07-22 00:28:18,256 - pipeline - INFO - Contrato de dados validado com sucesso e DataFrame processado.
+2026-07-22 00:28:18,597 - pipeline - INFO - Sucesso: Dados de Premier League salvos com sucesso.
+2026-07-22 00:28:18,598 - pipeline - INFO - Processando liga: Copa do Mundo (WC)
+2026-07-22 00:28:18,598 - pipeline - INFO - Tentativa 1 de 3 para a URL: https://api.football-data.org/v4/competitions/WC/standings
+2026-07-22 00:28:19,484 - pipeline - INFO - Dados extraídos com sucesso da API.
+2026-07-22 00:28:19,493 - pipeline - INFO - Contrato de dados validado com sucesso e DataFrame processado.
+2026-07-22 00:28:19,506 - pipeline - INFO - Sucesso: Dados de Copa do Mundo salvos com sucesso.
+2026-07-22 00:28:19,507 - pipeline - INFO - Processando liga: Champions League (CL)
+2026-07-22 00:28:19,507 - pipeline - INFO - Tentativa 1 de 3 para a URL: https://api.football-data.org/v4/competitions/CL/standings
+2026-07-22 00:28:20,163 - pipeline - INFO - Dados extraídos com sucesso da API.
+2026-07-22 00:28:20,168 - pipeline - INFO - Contrato de dados validado com sucesso e DataFrame processado.
+2026-07-22 00:28:20,181 - pipeline - INFO - Sucesso: Dados de Champions League salvos com sucesso.
+2026-07-22 00:28:20,181 - pipeline - INFO - Processando liga: Mundial de Clubes (FCWC)
+2026-07-22 00:28:20,182 - pipeline - INFO - Tentativa 1 de 3 para a URL: https://api.football-data.org/v4/competitions/FCWC/standings
+2026-07-22 00:28:21,086 - pipeline - ERROR - Erro fatal na requisição. Status code: 403 - Resposta: {"message":"The resource you are looking for is restricted and apparently not within your permissions. Please check your subscription.","errorCode":403}
+2026-07-22 00:28:21,087 - pipeline - ERROR - Falha crítica ao processar Mundial de Clubes: 403 Client Error:  for url: https://api.football-data.org/v4/competitions/FCWC/standings
+2026-07-22 00:28:21,088 - pipeline - INFO - Processando liga: Libertadores (CLI)
+2026-07-22 00:28:21,089 - pipeline - INFO - Tentativa 1 de 3 para a URL: https://api.football-data.org/v4/competitions/CLI/standings
+2026-07-22 00:28:22,094 - pipeline - INFO - Dados extraídos com sucesso da API.
+2026-07-22 00:28:22,099 - pipeline - INFO - Contrato de dados validado com sucesso e DataFrame processado.
+2026-07-22 00:28:22,112 - pipeline - INFO - Sucesso: Dados de Libertadores salvos com sucesso.
+2026-07-22 00:28:22,112 - pipeline - INFO - Processando liga: Brasileirão Série A (BSA)
+2026-07-22 00:28:22,113 - pipeline - INFO - Tentativa 1 de 3 para a URL: https://api.football-data.org/v4/competitions/BSA/standings
+2026-07-22 00:28:22,853 - pipeline - INFO - Dados extraídos com sucesso da API.
+2026-07-22 00:28:22,860 - pipeline - INFO - Contrato de dados validado com sucesso e DataFrame processado.
+2026-07-22 00:28:22,873 - pipeline - INFO - Sucesso: Dados de Brasileirão Série A salvos com sucesso.
+2026-07-22 00:28:22,874 - pipeline - INFO - Processando liga: La Liga (PD)
+2026-07-22 00:28:22,874 - pipeline - INFO - Tentativa 1 de 3 para a URL: https://api.football-data.org/v4/competitions/PD/standings
+2026-07-22 00:28:23,560 - pipeline - INFO - Dados extraídos com sucesso da API.
+2026-07-22 00:28:23,568 - pipeline - INFO - Contrato de dados validado com sucesso e DataFrame processado.
+2026-07-22 00:28:23,581 - pipeline - INFO - Sucesso: Dados de La Liga salvos com sucesso.
+2026-07-22 00:28:23,581 - pipeline - INFO - Processando liga: Ligue 1 (FL1)
+2026-07-22 00:28:23,582 - pipeline - INFO - Tentativa 1 de 3 para a URL: https://api.football-data.org/v4/competitions/FL1/standings
+2026-07-22 00:28:24,539 - pipeline - INFO - Dados extraídos com sucesso da API.
+2026-07-22 00:28:24,547 - pipeline - INFO - Contrato de dados validado com sucesso e DataFrame processado.
+2026-07-22 00:28:24,560 - pipeline - INFO - Sucesso: Dados de Ligue 1 salvos com sucesso.
+2026-07-22 00:28:24,561 - pipeline - INFO - Processando liga: Serie A Italiana (SA)
+2026-07-22 00:28:24,561 - pipeline - INFO - Tentativa 1 de 3 para a URL: https://api.football-data.org/v4/competitions/SA/standings
+2026-07-22 00:28:25,424 - pipeline - INFO - Dados extraídos com sucesso da API.
+2026-07-22 00:28:25,428 - pipeline - INFO - Contrato de dados validado com sucesso e DataFrame processado.
+2026-07-22 00:28:25,438 - pipeline - INFO - Sucesso: Dados de Serie A Italiana salvos com sucesso.
+2026-07-22 00:28:25,439 - pipeline - INFO - Processando liga: Bundesliga (BL1)
+2026-07-22 00:28:25,439 - pipeline - INFO - Tentativa 1 de 3 para a URL: https://api.football-data.org/v4/competitions/BL1/standings
+2026-07-22 00:28:26,098 - pipeline - INFO - Dados extraídos com sucesso da API.
+2026-07-22 00:28:26,104 - pipeline - INFO - Contrato de dados validado com sucesso e DataFrame processado.
+2026-07-22 00:28:26,117 - pipeline - INFO - Sucesso: Dados de Bundesliga salvos com sucesso.
+2026-07-22 00:28:26,118 - pipeline - INFO - Pipeline finalizado.
+2026-07-23 20:58:28,734 - pipeline - INFO - Iniciando execução do pipeline de dados.
+2026-07-23 20:58:28,745 - pipeline - INFO - Processando liga: Premier League (PL)
+2026-07-23 20:58:28,745 - pipeline - INFO - Tentativa 1 de 3 para a URL: https://api.football-data.org/v4/competitions/PL/standings
+2026-07-23 20:58:30,227 - pipeline - INFO - Dados extraídos com sucesso da API.
+2026-07-23 20:58:30,286 - pipeline - INFO - Contrato de dados validado com sucesso e DataFrame processado.
+2026-07-23 20:58:30,747 - pipeline - INFO - Sucesso: Dados de Premier League salvos com sucesso.
+2026-07-23 20:58:30,759 - pipeline - INFO - Processando liga: Copa do Mundo (WC)
+2026-07-23 20:58:30,759 - pipeline - INFO - Tentativa 1 de 3 para a URL: https://api.football-data.org/v4/competitions/WC/standings
+2026-07-23 20:58:31,559 - pipeline - INFO - Dados extraídos com sucesso da API.
+2026-07-23 20:58:31,564 - pipeline - INFO - Contrato de dados validado com sucesso e DataFrame processado.
+2026-07-23 20:58:31,628 - pipeline - INFO - Sucesso: Dados de Copa do Mundo salvos com sucesso.
+2026-07-23 20:58:31,631 - pipeline - INFO - Processando liga: Champions League (CL)
+2026-07-23 20:58:31,631 - pipeline - INFO - Tentativa 1 de 3 para a URL: https://api.football-data.org/v4/competitions/CL/standings
+2026-07-23 20:58:32,330 - pipeline - INFO - Dados extraídos com sucesso da API.
+2026-07-23 20:58:32,330 - pipeline - INFO - Contrato de dados validado com sucesso e DataFrame processado.
+2026-07-23 20:58:32,397 - pipeline - INFO - Sucesso: Dados de Champions League salvos com sucesso.
+2026-07-23 20:58:32,397 - pipeline - INFO - Processando liga: Mundial de Clubes (FCWC)
+2026-07-23 20:58:32,397 - pipeline - INFO - Tentativa 1 de 3 para a URL: https://api.football-data.org/v4/competitions/FCWC/standings
+2026-07-23 20:58:33,090 - pipeline - ERROR - Erro fatal na requisição. Status code: 403 - Resposta: {"message":"The resource you are looking for is restricted and apparently not within your permissions. Please check your subscription.","errorCode":403}
+2026-07-23 20:58:33,095 - pipeline - ERROR - Falha crítica ao processar Mundial de Clubes: 403 Client Error:  for url: https://api.football-data.org/v4/competitions/FCWC/standings
+2026-07-23 20:58:33,095 - pipeline - INFO - Processando liga: Libertadores (CLI)
+2026-07-23 20:58:33,095 - pipeline - INFO - Tentativa 1 de 3 para a URL: https://api.football-data.org/v4/competitions/CLI/standings
+2026-07-23 20:58:33,778 - pipeline - INFO - Dados extraídos com sucesso da API.
+2026-07-23 20:58:33,790 - pipeline - INFO - Contrato de dados validado com sucesso e DataFrame processado.
+2026-07-23 20:58:33,834 - pipeline - INFO - Sucesso: Dados de Libertadores salvos com sucesso.
+2026-07-23 20:58:33,834 - pipeline - INFO - Processando liga: Brasileirão Série A (BSA)
+2026-07-23 20:58:33,834 - pipeline - INFO - Tentativa 1 de 3 para a URL: https://api.football-data.org/v4/competitions/BSA/standings
+2026-07-23 20:58:34,526 - pipeline - INFO - Dados extraídos com sucesso da API.
+2026-07-23 20:58:34,539 - pipeline - INFO - Contrato de dados validado com sucesso e DataFrame processado.
+2026-07-23 20:58:34,556 - pipeline - INFO - Sucesso: Dados de Brasileirão Série A salvos com sucesso.
+2026-07-23 20:58:34,556 - pipeline - INFO - Processando liga: La Liga (PD)
+2026-07-23 20:58:34,556 - pipeline - INFO - Tentativa 1 de 3 para a URL: https://api.football-data.org/v4/competitions/PD/standings
+2026-07-23 20:58:35,309 - pipeline - INFO - Dados extraídos com sucesso da API.
+2026-07-23 20:58:35,309 - pipeline - INFO - Contrato de dados validado com sucesso e DataFrame processado.
+2026-07-23 20:58:35,373 - pipeline - INFO - Sucesso: Dados de La Liga salvos com sucesso.
+2026-07-23 20:58:35,373 - pipeline - INFO - Processando liga: Ligue 1 (FL1)
+2026-07-23 20:58:35,373 - pipeline - INFO - Tentativa 1 de 3 para a URL: https://api.football-data.org/v4/competitions/FL1/standings
+2026-07-23 20:58:36,021 - pipeline - INFO - Dados extraídos com sucesso da API.
+2026-07-23 20:58:36,021 - pipeline - INFO - Contrato de dados validado com sucesso e DataFrame processado.
+2026-07-23 20:58:36,089 - pipeline - INFO - Sucesso: Dados de Ligue 1 salvos com sucesso.
+2026-07-23 20:58:36,089 - pipeline - INFO - Processando liga: Serie A Italiana (SA)
+2026-07-23 20:58:36,089 - pipeline - INFO - Tentativa 1 de 3 para a URL: https://api.football-data.org/v4/competitions/SA/standings
+2026-07-23 20:58:36,810 - pipeline - INFO - Dados extraídos com sucesso da API.
+2026-07-23 20:58:36,828 - pipeline - INFO - Contrato de dados validado com sucesso e DataFrame processado.
+2026-07-23 20:58:36,858 - pipeline - INFO - Sucesso: Dados de Serie A Italiana salvos com sucesso.
+2026-07-23 20:58:36,858 - pipeline - INFO - Processando liga: Bundesliga (BL1)
+2026-07-23 20:58:36,860 - pipeline - INFO - Tentativa 1 de 3 para a URL: https://api.football-data.org/v4/competitions/BL1/standings
+2026-07-23 20:58:37,508 - pipeline - INFO - Dados extraídos com sucesso da API.
+2026-07-23 20:58:37,527 - pipeline - INFO - Contrato de dados validado com sucesso e DataFrame processado.
+2026-07-23 20:58:37,587 - pipeline - INFO - Sucesso: Dados de Bundesliga salvos com sucesso.
+2026-07-23 20:58:37,611 - pipeline - INFO - Consolidação dos KPIs finalizada com sucesso.
+2026-07-23 20:58:37,611 - pipeline - INFO - Pipeline finalizado.
+2026-07-23 20:59:06,132 - pipeline - INFO - Iniciando execução do pipeline de dados.
+2026-07-23 20:59:06,132 - pipeline - INFO - Processando liga: Premier League (PL)
+2026-07-23 20:59:06,132 - pipeline - INFO - Tentativa 1 de 3 para a URL: https://api.football-data.org/v4/competitions/PL/standings
+2026-07-27 20:12:44,676 - pipeline - INFO - Iniciando execução do pipeline de dados (Standings & Matches).
+2026-07-27 20:12:44,676 - pipeline - INFO - --- Processando competição: Premier League (PL) ---
+2026-07-27 20:12:44,676 - pipeline - INFO - Tentativa 1 de 3 para a URL: https://api.football-data.org/v4/competitions/PL/standings
+2026-07-27 20:12:46,254 - pipeline - INFO - Dados extraídos com sucesso da API.
+2026-07-27 20:12:46,272 - pipeline - INFO - Contrato de dados de classificação validado com sucesso.
+2026-07-27 20:12:46,905 - pipeline - INFO - Tentativa 1 de 3 para a URL: https://api.football-data.org/v4/competitions/PL/matches
+2026-07-27 20:12:48,208 - pipeline - INFO - Dados extraídos com sucesso da API.
+2026-07-27 20:12:48,272 - pipeline - INFO - Contrato de partidas validado. 380 jogos processados com sucesso.
+2026-07-27 20:12:48,309 - pipeline - INFO - --- Processando competição: Copa do Mundo (WC) ---
+2026-07-27 20:12:48,309 - pipeline - INFO - Tentativa 1 de 3 para a URL: https://api.football-data.org/v4/competitions/WC/standings
+2026-07-27 20:12:49,004 - pipeline - INFO - Dados extraídos com sucesso da API.
+2026-07-27 20:12:49,012 - pipeline - INFO - Contrato de dados de classificação validado com sucesso.
+2026-07-27 20:12:49,079 - pipeline - INFO - Tentativa 1 de 3 para a URL: https://api.football-data.org/v4/competitions/WC/matches
+2026-07-27 20:12:49,875 - pipeline - INFO - Dados extraídos com sucesso da API.
+2026-07-27 20:12:49,897 - pipeline - INFO - Contrato de partidas validado. 104 jogos processados com sucesso.
+2026-07-27 20:12:49,965 - pipeline - INFO - --- Processando competição: Champions League (CL) ---
+2026-07-27 20:12:49,965 - pipeline - INFO - Tentativa 1 de 3 para a URL: https://api.football-data.org/v4/competitions/CL/standings
+2026-07-27 20:12:50,873 - pipeline - INFO - Dados extraídos com sucesso da API.
+2026-07-27 20:12:50,890 - pipeline - INFO - Contrato de dados de classificação validado com sucesso.
+2026-07-27 20:12:50,922 - pipeline - INFO - Tentativa 1 de 3 para a URL: https://api.football-data.org/v4/competitions/CL/matches
+2026-07-27 20:12:52,466 - pipeline - INFO - Dados extraídos com sucesso da API.
+2026-07-27 20:12:52,491 - pipeline - INFO - Contrato de partidas validado. 189 jogos processados com sucesso.
+2026-07-27 20:12:52,507 - pipeline - INFO - --- Processando competição: Mundial de Clubes (FCWC) ---
+2026-07-27 20:12:52,507 - pipeline - INFO - Tentativa 1 de 3 para a URL: https://api.football-data.org/v4/competitions/FCWC/standings
+2026-07-27 20:12:53,242 - pipeline - ERROR - Erro fatal na requisição. Status code: 403 - Resposta: {"message":"The resource you are looking for is restricted and apparently not within your permissions. Please check your subscription.","errorCode":403}
+2026-07-27 20:12:53,242 - pipeline - ERROR - Falha crítica ao processar Mundial de Clubes: 403 Client Error:  for url: https://api.football-data.org/v4/competitions/FCWC/standings
+2026-07-27 20:12:53,242 - pipeline - INFO - --- Processando competição: Libertadores (CLI) ---
+2026-07-27 20:12:53,242 - pipeline - INFO - Tentativa 1 de 3 para a URL: https://api.football-data.org/v4/competitions/CLI/standings
+2026-07-27 20:12:53,959 - pipeline - INFO - Dados extraídos com sucesso da API.
+2026-07-27 20:12:53,967 - pipeline - INFO - Contrato de dados de classificação validado com sucesso.
+2026-07-27 20:12:53,991 - pipeline - INFO - Tentativa 1 de 3 para a URL: https://api.football-data.org/v4/competitions/CLI/matches
+2026-07-27 20:12:55,002 - pipeline - INFO - Dados extraídos com sucesso da API.
+2026-07-27 20:12:55,011 - pipeline - ERROR - Falha na validação ou transformação de partidas (matches): 2 validation errors for MatchRowSchema
+home_team
+  Input should be a valid string [type=string_type, input_value=None, input_type=NoneType]
+    For further information visit https://errors.pydantic.dev/2.13/v/string_type
+away_team
+  Input should be a valid string [type=string_type, input_value=None, input_type=NoneType]
+    For further information visit https://errors.pydantic.dev/2.13/v/string_type
+2026-07-27 20:12:55,011 - pipeline - ERROR - Falha crítica ao processar Libertadores: 2 validation errors for MatchRowSchema
+home_team
+  Input should be a valid string [type=string_type, input_value=None, input_type=NoneType]
+    For further information visit https://errors.pydantic.dev/2.13/v/string_type
+away_team
+  Input should be a valid string [type=string_type, input_value=None, input_type=NoneType]
+    For further information visit https://errors.pydantic.dev/2.13/v/string_type
+2026-07-27 20:12:55,011 - pipeline - INFO - --- Processando competição: Brasileirão Série A (BSA) ---
+2026-07-27 20:12:55,011 - pipeline - INFO - Tentativa 1 de 3 para a URL: https://api.football-data.org/v4/competitions/BSA/standings
+2026-07-27 20:12:55,698 - pipeline - INFO - Dados extraídos com sucesso da API.
+2026-07-27 20:12:55,715 - pipeline - INFO - Contrato de dados de classificação validado com sucesso.
+2026-07-27 20:12:55,740 - pipeline - INFO - Tentativa 1 de 3 para a URL: https://api.football-data.org/v4/competitions/BSA/matches
+2026-07-27 20:12:57,184 - pipeline - INFO - Dados extraídos com sucesso da API.
+2026-07-27 20:12:57,226 - pipeline - INFO - Contrato de partidas validado. 380 jogos processados com sucesso.
+2026-07-27 20:12:57,242 - pipeline - INFO - --- Processando competição: La Liga (PD) ---
+2026-07-27 20:12:57,242 - pipeline - INFO - Tentativa 1 de 3 para a URL: https://api.football-data.org/v4/competitions/PD/standings
+2026-07-27 20:12:57,977 - pipeline - WARNING - Servidor retornou status instável (429). Tentando novamente...
+2026-07-27 20:12:57,977 - pipeline - INFO - Aguardando 2 segundos antes da próxima tentativa...
+2026-07-27 20:12:59,984 - pipeline - INFO - Tentativa 2 de 3 para a URL: https://api.football-data.org/v4/competitions/PD/standings
+2026-07-27 20:13:00,653 - pipeline - WARNING - Servidor retornou status instável (429). Tentando novamente...
+2026-07-27 20:13:00,653 - pipeline - INFO - Aguardando 4 segundos antes da próxima tentativa...
+2026-07-27 20:13:04,655 - pipeline - INFO - Tentativa 3 de 3 para a URL: https://api.football-data.org/v4/competitions/PD/standings
+2026-07-27 20:13:05,546 - pipeline - WARNING - Servidor retornou status instável (429). Tentando novamente...
+2026-07-27 20:13:05,546 - pipeline - ERROR - Número máximo de tentativas excedido. Falha na extração.
+2026-07-27 20:13:05,546 - pipeline - ERROR - Falha crítica ao processar La Liga: Não foi possível extrair os dados para a URL https://api.football-data.org/v4/competitions/PD/standings após várias tentativas.
+2026-07-27 20:13:05,546 - pipeline - INFO - --- Processando competição: Ligue 1 (FL1) ---
+2026-07-27 20:13:05,546 - pipeline - INFO - Tentativa 1 de 3 para a URL: https://api.football-data.org/v4/competitions/FL1/standings
+2026-07-27 20:13:06,204 - pipeline - WARNING - Servidor retornou status instável (429). Tentando novamente...
+2026-07-27 20:13:06,212 - pipeline - INFO - Aguardando 2 segundos antes da próxima tentativa...
+2026-07-27 20:13:08,217 - pipeline - INFO - Tentativa 2 de 3 para a URL: https://api.football-data.org/v4/competitions/FL1/standings
+2026-07-27 20:13:08,966 - pipeline - WARNING - Servidor retornou status instável (429). Tentando novamente...
+2026-07-27 20:13:08,966 - pipeline - INFO - Aguardando 4 segundos antes da próxima tentativa...
+2026-07-27 20:13:12,970 - pipeline - INFO - Tentativa 3 de 3 para a URL: https://api.football-data.org/v4/competitions/FL1/standings
+2026-07-27 20:13:13,702 - pipeline - WARNING - Servidor retornou status instável (429). Tentando novamente...
+2026-07-27 20:13:13,702 - pipeline - ERROR - Número máximo de tentativas excedido. Falha na extração.
+2026-07-27 20:13:13,702 - pipeline - ERROR - Falha crítica ao processar Ligue 1: Não foi possível extrair os dados para a URL https://api.football-data.org/v4/competitions/FL1/standings após várias tentativas.
+2026-07-27 20:13:13,702 - pipeline - INFO - --- Processando competição: Serie A Italiana (SA) ---
+2026-07-27 20:13:13,702 - pipeline - INFO - Tentativa 1 de 3 para a URL: https://api.football-data.org/v4/competitions/SA/standings
+2026-07-27 20:13:14,432 - pipeline - WARNING - Servidor retornou status instável (429). Tentando novamente...
+2026-07-27 20:13:14,432 - pipeline - INFO - Aguardando 2 segundos antes da próxima tentativa...
+2026-07-27 20:13:16,445 - pipeline - INFO - Tentativa 2 de 3 para a URL: https://api.football-data.org/v4/competitions/SA/standings
+2026-07-27 20:13:17,296 - pipeline - WARNING - Servidor retornou status instável (429). Tentando novamente...
+2026-07-27 20:13:17,296 - pipeline - INFO - Aguardando 4 segundos antes da próxima tentativa...
+2026-07-27 20:13:21,298 - pipeline - INFO - Tentativa 3 de 3 para a URL: https://api.football-data.org/v4/competitions/SA/standings
+2026-07-27 20:13:21,985 - pipeline - WARNING - Servidor retornou status instável (429). Tentando novamente...
+2026-07-27 20:13:21,985 - pipeline - ERROR - Número máximo de tentativas excedido. Falha na extração.
+2026-07-27 20:13:21,985 - pipeline - ERROR - Falha crítica ao processar Serie A Italiana: Não foi possível extrair os dados para a URL https://api.football-data.org/v4/competitions/SA/standings após várias tentativas.
+2026-07-27 20:13:21,985 - pipeline - INFO - --- Processando competição: Bundesliga (BL1) ---
+2026-07-27 20:13:21,985 - pipeline - INFO - Tentativa 1 de 3 para a URL: https://api.football-data.org/v4/competitions/BL1/standings
+2026-07-27 20:13:22,723 - pipeline - WARNING - Servidor retornou status instável (429). Tentando novamente...
+2026-07-27 20:13:22,723 - pipeline - INFO - Aguardando 2 segundos antes da próxima tentativa...
+2026-07-27 20:13:24,727 - pipeline - INFO - Tentativa 2 de 3 para a URL: https://api.football-data.org/v4/competitions/BL1/standings
+2026-07-27 20:13:25,418 - pipeline - WARNING - Servidor retornou status instável (429). Tentando novamente...
+2026-07-27 20:13:25,418 - pipeline - INFO - Aguardando 4 segundos antes da próxima tentativa...
+2026-07-27 20:13:29,424 - pipeline - INFO - Tentativa 3 de 3 para a URL: https://api.football-data.org/v4/competitions/BL1/standings
+2026-07-27 20:13:30,115 - pipeline - WARNING - Servidor retornou status instável (429). Tentando novamente...
+2026-07-27 20:13:30,115 - pipeline - ERROR - Número máximo de tentativas excedido. Falha na extração.
+2026-07-27 20:13:30,115 - pipeline - ERROR - Falha crítica ao processar Bundesliga: Não foi possível extrair os dados para a URL https://api.football-data.org/v4/competitions/BL1/standings após várias tentativas.
+2026-07-27 20:13:30,211 - pipeline - INFO - Pipeline finalizado com sucesso absoluto.
+2026-07-27 20:21:16,806 - pipeline - INFO - Iniciando execução do pipeline de dados (Standings & Matches).
+2026-07-27 20:21:16,806 - pipeline - INFO - --- Processando competição: Premier League (PL) ---
+2026-07-27 20:21:16,806 - pipeline - INFO - Tentativa 1 de 3 para a URL: https://api.football-data.org/v4/competitions/PL/standings
+2026-07-27 20:21:18,050 - pipeline - INFO - Dados extraídos com sucesso da API.
+2026-07-27 20:21:18,074 - pipeline - INFO - Contrato de dados de classificação validado com sucesso.
+2026-07-27 20:21:24,238 - pipeline - INFO - Tentativa 1 de 3 para a URL: https://api.football-data.org/v4/competitions/PL/matches
+2026-07-27 20:21:25,131 - pipeline - INFO - Dados extraídos com sucesso da API.
+2026-07-27 20:21:25,189 - pipeline - INFO - Contrato de partidas validado. 380 jogos processados com sucesso.
+2026-07-27 20:21:31,213 - pipeline - INFO - --- Processando competição: Copa do Mundo (WC) ---
+2026-07-27 20:21:31,213 - pipeline - INFO - Tentativa 1 de 3 para a URL: https://api.football-data.org/v4/competitions/WC/standings
+2026-07-27 20:21:32,012 - pipeline - INFO - Dados extraídos com sucesso da API.
+2026-07-27 20:21:32,019 - pipeline - INFO - Contrato de dados de classificação validado com sucesso.
+2026-07-27 20:21:38,048 - pipeline - INFO - Tentativa 1 de 3 para a URL: https://api.football-data.org/v4/competitions/WC/matches
+2026-07-27 20:21:38,894 - pipeline - INFO - Dados extraídos com sucesso da API.
+2026-07-27 20:21:38,938 - pipeline - INFO - Contrato de partidas validado. 104 jogos processados com sucesso.
+2026-07-27 20:21:44,965 - pipeline - INFO - --- Processando competição: Champions League (CL) ---
+2026-07-27 20:21:44,965 - pipeline - INFO - Tentativa 1 de 3 para a URL: https://api.football-data.org/v4/competitions/CL/standings
+2026-07-27 20:21:45,745 - pipeline - INFO - Dados extraídos com sucesso da API.
+2026-07-27 20:21:45,793 - pipeline - INFO - Contrato de dados de classificação validado com sucesso.
+2026-07-27 20:21:51,844 - pipeline - INFO - Tentativa 1 de 3 para a URL: https://api.football-data.org/v4/competitions/CL/matches
+2026-07-27 20:21:53,604 - pipeline - INFO - Dados extraídos com sucesso da API.
+2026-07-27 20:21:53,637 - pipeline - INFO - Contrato de partidas validado. 189 jogos processados com sucesso.
+2026-07-27 20:21:59,666 - pipeline - INFO - --- Processando competição: Mundial de Clubes (FCWC) ---
+2026-07-27 20:21:59,666 - pipeline - INFO - Tentativa 1 de 3 para a URL: https://api.football-data.org/v4/competitions/FCWC/standings
+2026-07-27 20:22:00,401 - pipeline - ERROR - Erro fatal na requisição. Status code: 403 - Resposta: {"message":"The resource you are looking for is restricted and apparently not within your permissions. Please check your subscription.","errorCode":403}
+2026-07-27 20:22:00,401 - pipeline - ERROR - Falha crítica ao processar Mundial de Clubes: 403 Client Error:  for url: https://api.football-data.org/v4/competitions/FCWC/standings
+2026-07-27 20:22:00,409 - pipeline - INFO - --- Processando competição: Libertadores (CLI) ---
+2026-07-27 20:22:00,409 - pipeline - INFO - Tentativa 1 de 3 para a URL: https://api.football-data.org/v4/competitions/CLI/standings
+2026-07-27 20:22:01,112 - pipeline - INFO - Dados extraídos com sucesso da API.
+2026-07-27 20:22:01,120 - pipeline - INFO - Contrato de dados de classificação validado com sucesso.
+2026-07-27 20:22:07,141 - pipeline - INFO - Tentativa 1 de 3 para a URL: https://api.football-data.org/v4/competitions/CLI/matches
+2026-07-27 20:22:07,989 - pipeline - INFO - Dados extraídos com sucesso da API.
+2026-07-27 20:22:08,006 - pipeline - INFO - Contrato de partidas validado. 147 jogos processados com sucesso.
+2026-07-27 20:22:14,080 - pipeline - INFO - --- Processando competição: Brasileirão Série A (BSA) ---
+2026-07-27 20:22:14,080 - pipeline - INFO - Tentativa 1 de 3 para a URL: https://api.football-data.org/v4/competitions/BSA/standings
+2026-07-27 20:22:14,792 - pipeline - INFO - Dados extraídos com sucesso da API.
+2026-07-27 20:22:14,794 - pipeline - INFO - Contrato de dados de classificação validado com sucesso.
+2026-07-27 20:22:20,826 - pipeline - INFO - Tentativa 1 de 3 para a URL: https://api.football-data.org/v4/competitions/BSA/matches
+2026-07-27 20:22:21,977 - pipeline - INFO - Dados extraídos com sucesso da API.
+2026-07-27 20:22:22,010 - pipeline - INFO - Contrato de partidas validado. 380 jogos processados com sucesso.
+2026-07-27 20:22:28,038 - pipeline - INFO - --- Processando competição: La Liga (PD) ---
+2026-07-27 20:22:28,038 - pipeline - INFO - Tentativa 1 de 3 para a URL: https://api.football-data.org/v4/competitions/PD/standings
+2026-07-27 20:22:29,415 - pipeline - INFO - Dados extraídos com sucesso da API.
+2026-07-27 20:22:29,423 - pipeline - INFO - Contrato de dados de classificação validado com sucesso.
+2026-07-27 20:22:35,452 - pipeline - INFO - Tentativa 1 de 3 para a URL: https://api.football-data.org/v4/competitions/PD/matches
+2026-07-27 20:22:36,524 - pipeline - INFO - Dados extraídos com sucesso da API.
+2026-07-27 20:22:36,564 - pipeline - INFO - Contrato de partidas validado. 380 jogos processados com sucesso.
+2026-07-27 20:22:42,620 - pipeline - INFO - --- Processando competição: Ligue 1 (FL1) ---
+2026-07-27 20:22:42,620 - pipeline - INFO - Tentativa 1 de 3 para a URL: https://api.football-data.org/v4/competitions/FL1/standings
+2026-07-27 20:22:43,398 - pipeline - INFO - Dados extraídos com sucesso da API.
+2026-07-27 20:22:43,406 - pipeline - INFO - Contrato de dados de classificação validado com sucesso.
+2026-07-27 20:22:49,472 - pipeline - INFO - Tentativa 1 de 3 para a URL: https://api.football-data.org/v4/competitions/FL1/matches
+2026-07-27 20:22:52,105 - pipeline - INFO - Dados extraídos com sucesso da API.
+2026-07-27 20:22:52,141 - pipeline - INFO - Contrato de partidas validado. 306 jogos processados com sucesso.
+2026-07-27 20:22:58,174 - pipeline - INFO - --- Processando competição: Serie A Italiana (SA) ---
+2026-07-27 20:22:58,174 - pipeline - INFO - Tentativa 1 de 3 para a URL: https://api.football-data.org/v4/competitions/SA/standings
+2026-07-27 20:22:58,835 - pipeline - INFO - Dados extraídos com sucesso da API.
+2026-07-27 20:22:58,852 - pipeline - INFO - Contrato de dados de classificação validado com sucesso.
+2026-07-27 20:23:04,926 - pipeline - INFO - Tentativa 1 de 3 para a URL: https://api.football-data.org/v4/competitions/SA/matches
+2026-07-27 20:23:06,000 - pipeline - INFO - Dados extraídos com sucesso da API.
+2026-07-27 20:23:06,039 - pipeline - INFO - Contrato de partidas validado. 380 jogos processados com sucesso.
+2026-07-27 20:23:12,067 - pipeline - INFO - --- Processando competição: Bundesliga (BL1) ---
+2026-07-27 20:23:12,067 - pipeline - INFO - Tentativa 1 de 3 para a URL: https://api.football-data.org/v4/competitions/BL1/standings
+2026-07-27 20:23:12,757 - pipeline - INFO - Dados extraídos com sucesso da API.
+2026-07-27 20:23:12,771 - pipeline - INFO - Contrato de dados de classificação validado com sucesso.
+2026-07-27 20:23:18,794 - pipeline - INFO - Tentativa 1 de 3 para a URL: https://api.football-data.org/v4/competitions/BL1/matches
+2026-07-27 20:23:19,695 - pipeline - INFO - Dados extraídos com sucesso da API.
+2026-07-27 20:23:19,736 - pipeline - INFO - Contrato de partidas validado. 306 jogos processados com sucesso.
+2026-07-27 20:23:26,051 - pipeline - INFO - Pipeline finalizado com sucesso absoluto.
+2026-07-29 22:47:59,146 - pipeline - INFO - Iniciando execução do pipeline (Hive Partitioning).
+2026-07-29 22:47:59,148 - pipeline - INFO - --- Processando competição: Premier League (PL) ---
+2026-07-29 22:47:59,148 - pipeline - INFO - Tentativa 1 de 3 para a URL: https://api.football-data.org/v4/competitions/PL/standings
+2026-07-29 22:48:00,683 - pipeline - INFO - Dados extraídos com sucesso da API.
+2026-07-29 22:48:00,703 - pipeline - INFO - Contrato de dados de classificação validado com sucesso.
+2026-07-29 22:48:07,084 - pipeline - INFO - Tentativa 1 de 3 para a URL: https://api.football-data.org/v4/competitions/PL/matches
+2026-07-29 22:48:08,238 - pipeline - INFO - Dados extraídos com sucesso da API.
+2026-07-29 22:48:08,276 - pipeline - INFO - Contrato de partidas validado. 380 jogos processados com sucesso.
+2026-07-29 22:48:14,299 - pipeline - INFO - --- Processando competição: Copa do Mundo (WC) ---
+2026-07-29 22:48:14,299 - pipeline - INFO - Tentativa 1 de 3 para a URL: https://api.football-data.org/v4/competitions/WC/standings
+2026-07-29 22:48:15,110 - pipeline - INFO - Dados extraídos com sucesso da API.
+2026-07-29 22:48:15,114 - pipeline - INFO - Contrato de dados de classificação validado com sucesso.
+2026-07-29 22:48:21,132 - pipeline - INFO - Tentativa 1 de 3 para a URL: https://api.football-data.org/v4/competitions/WC/matches
+2026-07-29 22:48:22,055 - pipeline - INFO - Dados extraídos com sucesso da API.
+2026-07-29 22:48:22,066 - pipeline - INFO - Contrato de partidas validado. 104 jogos processados com sucesso.
+2026-07-29 22:48:28,078 - pipeline - INFO - --- Processando competição: Champions League (CL) ---
+2026-07-29 22:48:28,078 - pipeline - INFO - Tentativa 1 de 3 para a URL: https://api.football-data.org/v4/competitions/CL/standings
+2026-07-29 22:48:29,425 - pipeline - INFO - Dados extraídos com sucesso da API.
+2026-07-29 22:48:29,431 - pipeline - INFO - Contrato de dados de classificação validado com sucesso.
+2026-07-29 22:48:35,493 - pipeline - INFO - Tentativa 1 de 3 para a URL: https://api.football-data.org/v4/competitions/CL/matches
+2026-07-29 22:48:36,768 - pipeline - INFO - Dados extraídos com sucesso da API.
+2026-07-29 22:48:36,778 - pipeline - INFO - Contrato de partidas validado. 189 jogos processados com sucesso.
+2026-07-29 22:48:42,795 - pipeline - INFO - --- Processando competição: Mundial de Clubes (FCWC) ---
+2026-07-29 22:48:42,795 - pipeline - INFO - Tentativa 1 de 3 para a URL: https://api.football-data.org/v4/competitions/FCWC/standings
+2026-07-29 22:48:43,733 - pipeline - ERROR - Erro fatal na requisição. Status code: 403 - Resposta: {"message":"The resource you are looking for is restricted and apparently not within your permissions. Please check your subscription.","errorCode":403}
+2026-07-29 22:48:43,734 - pipeline - ERROR - Falha crítica ao processar Mundial de Clubes: 403 Client Error:  for url: https://api.football-data.org/v4/competitions/FCWC/standings
+2026-07-29 22:48:43,735 - pipeline - INFO - --- Processando competição: Libertadores (CLI) ---
+2026-07-29 22:48:43,735 - pipeline - INFO - Tentativa 1 de 3 para a URL: https://api.football-data.org/v4/competitions/CLI/standings
+2026-07-29 22:48:44,470 - pipeline - INFO - Dados extraídos com sucesso da API.
+2026-07-29 22:48:44,473 - pipeline - INFO - Contrato de dados de classificação validado com sucesso.
+2026-07-29 22:48:50,486 - pipeline - INFO - Tentativa 1 de 3 para a URL: https://api.football-data.org/v4/competitions/CLI/matches
+2026-07-29 22:48:51,735 - pipeline - INFO - Dados extraídos com sucesso da API.
+2026-07-29 22:48:51,757 - pipeline - INFO - Contrato de partidas validado. 147 jogos processados com sucesso.
+2026-07-29 22:48:57,772 - pipeline - INFO - --- Processando competição: Brasileirão Série A (BSA) ---
+2026-07-29 22:48:57,772 - pipeline - INFO - Tentativa 1 de 3 para a URL: https://api.football-data.org/v4/competitions/BSA/standings
+2026-07-29 22:48:58,961 - pipeline - INFO - Dados extraídos com sucesso da API.
+2026-07-29 22:48:58,967 - pipeline - INFO - Contrato de dados de classificação validado com sucesso.
+2026-07-29 22:49:04,980 - pipeline - INFO - Tentativa 1 de 3 para a URL: https://api.football-data.org/v4/competitions/BSA/matches
+2026-07-29 22:49:06,422 - pipeline - INFO - Dados extraídos com sucesso da API.
+2026-07-29 22:49:06,441 - pipeline - INFO - Contrato de partidas validado. 380 jogos processados com sucesso.
+2026-07-29 22:49:12,461 - pipeline - INFO - --- Processando competição: La Liga (PD) ---
+2026-07-29 22:49:12,465 - pipeline - INFO - Tentativa 1 de 3 para a URL: https://api.football-data.org/v4/competitions/PD/standings
+2026-07-29 22:49:13,301 - pipeline - INFO - Dados extraídos com sucesso da API.
+2026-07-29 22:49:13,306 - pipeline - INFO - Contrato de dados de classificação validado com sucesso.
+2026-07-29 22:49:19,324 - pipeline - INFO - Tentativa 1 de 3 para a URL: https://api.football-data.org/v4/competitions/PD/matches
+2026-07-29 22:49:20,406 - pipeline - INFO - Dados extraídos com sucesso da API.
+2026-07-29 22:49:20,427 - pipeline - INFO - Contrato de partidas validado. 380 jogos processados com sucesso.
+2026-07-29 22:49:26,445 - pipeline - INFO - --- Processando competição: Ligue 1 (FL1) ---
+2026-07-29 22:49:26,445 - pipeline - INFO - Tentativa 1 de 3 para a URL: https://api.football-data.org/v4/competitions/FL1/standings
+2026-07-29 22:49:27,249 - pipeline - INFO - Dados extraídos com sucesso da API.
+2026-07-29 22:49:27,254 - pipeline - INFO - Contrato de dados de classificação validado com sucesso.
+2026-07-29 22:49:33,267 - pipeline - INFO - Tentativa 1 de 3 para a URL: https://api.football-data.org/v4/competitions/FL1/matches
+2026-07-29 22:49:37,619 - pipeline - INFO - Dados extraídos com sucesso da API.
+2026-07-29 22:49:37,632 - pipeline - INFO - Contrato de partidas validado. 306 jogos processados com sucesso.
+2026-07-29 22:49:43,648 - pipeline - INFO - --- Processando competição: Serie A Italiana (SA) ---
+2026-07-29 22:49:43,648 - pipeline - INFO - Tentativa 1 de 3 para a URL: https://api.football-data.org/v4/competitions/SA/standings
+2026-07-29 22:49:44,587 - pipeline - INFO - Dados extraídos com sucesso da API.
+2026-07-29 22:49:44,592 - pipeline - INFO - Contrato de dados de classificação validado com sucesso.
+2026-07-29 22:49:50,644 - pipeline - INFO - Tentativa 1 de 3 para a URL: https://api.football-data.org/v4/competitions/SA/matches
+2026-07-29 22:49:51,996 - pipeline - INFO - Dados extraídos com sucesso da API.
+2026-07-29 22:49:52,014 - pipeline - INFO - Contrato de partidas validado. 380 jogos processados com sucesso.
+2026-07-29 22:49:58,031 - pipeline - INFO - --- Processando competição: Bundesliga (BL1) ---
+2026-07-29 22:49:58,031 - pipeline - INFO - Tentativa 1 de 3 para a URL: https://api.football-data.org/v4/competitions/BL1/standings
+2026-07-29 22:49:59,126 - pipeline - INFO - Dados extraídos com sucesso da API.
+2026-07-29 22:49:59,131 - pipeline - INFO - Contrato de dados de classificação validado com sucesso.
+2026-07-29 22:50:05,145 - pipeline - INFO - Tentativa 1 de 3 para a URL: https://api.football-data.org/v4/competitions/BL1/matches
+2026-07-29 22:50:06,738 - pipeline - INFO - Dados extraídos com sucesso da API.
+2026-07-29 22:50:06,755 - pipeline - INFO - Contrato de partidas validado. 306 jogos processados com sucesso.
+2026-07-29 22:50:12,774 - pipeline - INFO - Pipeline finalizado com sucesso. Dados organizados em partições Hive.

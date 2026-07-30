@@ -14,42 +14,36 @@ LEAGUES = {
 st.title("⚽ Dashboard Global de Futebol")
 st.markdown("---")
 
-def get_data_by_date(league_code, date_str):
-    """Lê o arquivo Parquet específico de uma liga em uma data[cite: 1]."""
+def get_data_by_date(league_code, date_folder):
     file_path = os.path.join(
         os.path.dirname(os.path.abspath(__file__)), 
-        "data", "gold", date_str, f"{league_code}_{date_str}.parquet"
+        "data", "gold", "standings", date_folder, f"league_code={league_code}"
     )
     if os.path.exists(file_path):
         return pd.read_parquet(file_path)
     return None
 
 def get_latest_data(league_code):
-    """Busca os dados da execução mais recente e da anterior para cálculo de deltas[cite: 1]."""
-    base_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "gold")
+    base_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "gold", "standings")
     if not os.path.exists(base_dir): 
         return None, None, None
     
-    # Lista apenas pastas diárias, ignorando arquivos como kpis.parquet
-    dates = sorted([
-        d for d in os.listdir(base_dir) 
-        if os.path.isdir(os.path.join(base_dir, d))
-    ], reverse=True)
-    
+    dates = sorted([d for d in os.listdir(base_dir) if d.startswith("date=")], reverse=True)
     if not dates: 
         return None, None, None
     
     df_now = get_data_by_date(league_code, dates[0])
     df_past = get_data_by_date(league_code, dates[1]) if len(dates) > 1 else None
-    return df_now, dates[0], df_past
+    
+    date_now_str = dates[0].replace("date=", "")
+    return df_now, date_now_str, df_past
 
 selected_league_name = st.sidebar.selectbox("Selecione a Competição:", list(LEAGUES.keys()))
 league_code = LEAGUES[selected_league_name]
 df, date_now, df_past = get_latest_data(league_code)
 
 if df is not None:
-    # Lógica de Volatilidade e Cálculo de Delta de Posição[cite: 1]
-    if df_past is not None:
+    if df_past is not None and not df_past.empty:
         comparison = df[['team_name', 'position']].merge(
             df_past[['team_name', 'position']], on='team_name', suffixes=('_now', '_past')
         )
@@ -77,17 +71,16 @@ if df is not None:
 
     st.markdown("---")
     
-    # Análise de Tendência Histórica[cite: 1]
     st.subheader(f"Tendência de Posição: {selected_team}")
-    base_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "gold")
-    dates = sorted([d for d in os.listdir(base_dir) if os.path.isdir(os.path.join(base_dir, d))])
+    base_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "gold", "standings")
+    dates = sorted([d for d in os.listdir(base_dir) if d.startswith("date=")])
     
     history = []
-    for date in dates:
-        df_hist = get_data_by_date(league_code, date)
-        if df_hist is not None and selected_team in df_hist['team_name'].values:
+    for date_folder in dates:
+        df_hist = get_data_by_date(league_code, date_folder)
+        if df_hist is not None and not df_hist.empty and selected_team in df_hist['team_name'].values:
             pos = df_hist[df_hist['team_name'] == selected_team]['position'].values[0]
-            history.append({'data': date, 'posicao': pos})
+            history.append({'data': date_folder.replace("date=", ""), 'posicao': pos})
     
     if history:
         df_history = pd.DataFrame(history)
@@ -112,4 +105,4 @@ if df is not None:
         use_container_width=True, hide_index=True
     )
 else:
-    st.warning("Nenhum dado processado foi encontrado localmente. Execute `python -m src.main` no terminal para rodar o pipeline ETL e gerar a camada Gold.")
+    st.warning("Nenhuma partição encontrada. Execute `python -m src.main` para gerar a camada Gold particionada.")
