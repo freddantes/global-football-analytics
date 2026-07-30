@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import duckdb
 import os
 import plotly.express as px
 
@@ -14,36 +15,59 @@ LEAGUES = {
 st.title("⚽ Dashboard Global de Futebol")
 st.markdown("---")
 
-def get_data_by_date(league_code, date_folder):
-    file_path = os.path.join(
-        os.path.dirname(os.path.abspath(__file__)), 
-        "data", "gold", "standings", date_folder, f"league_code={league_code}"
-    )
-    if os.path.exists(file_path):
-        return pd.read_parquet(file_path)
-    return None
+@st.cache_data
+def load_standings_via_duckdb(league_code: str):
+    """
+    Usa o DuckDB para consultar as partições Hive da tabela de classificação
+    de forma ultra-rápida, aplicando Partition Pruning automático.
+    """
+    parquet_path = os.path.join("data", "gold", "standings", "**", "*.parquet")
+    if not os.path.exists(os.path.join("data", "gold", "standings")):
+        return None
+        
+    query = f"""
+        SELECT * 
+        FROM read_parquet('{parquet_path}', hive_partitioning=1)
+        WHERE league_code = '{league_code}'
+    """
+    try:
+        df = duckdb.query(query).to_df()
+        if df.empty:
+            return None
+        return df
+    except Exception:
+        return None
 
-def get_latest_data(league_code):
-    base_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "gold", "standings")
-    if not os.path.exists(base_dir): 
-        return None, None, None
-    
-    dates = sorted([d for d in os.listdir(base_dir) if d.startswith("date=")], reverse=True)
-    if not dates: 
-        return None, None, None
-    
-    df_now = get_data_by_date(league_code, dates[0])
-    df_past = get_data_by_date(league_code, dates[1]) if len(dates) > 1 else None
-    
-    date_now_str = dates[0].replace("date=", "")
-    return df_now, date_now_str, df_past
-
+# Carrega todos os dados históricos da liga selecionada
 selected_league_name = st.sidebar.selectbox("Selecione a Competição:", list(LEAGUES.keys()))
 league_code = LEAGUES[selected_league_name]
-df, date_now, df_past = get_latest_data(league_code)
 
-if df is not None:
-    if df_past is not None and not df_past.empty:
+df_league_history = load_standings_via_duckdb(league_code)
+
+if df_league_history is not None and not df_league_history.empty:
+    # Identifica as datas disponíveis ordenadas cronologicamente
+    available_dates = sorted(df_league_history['date'].unique(), reverse=True) if 'date' in df_league_history.columns else sorted(df_league_history['__file_nameừ'].unique(), reverse=True)
+    
+    # Se a coluna 'date' não vier explícita pelo hive_partitioning, extraímos do caminho do arquivo
+    # Garantimos a listagem de datas distinta presente no dataset
+    dates = sorted(df_league_history['date'].unique(), reverse=True) if 'date' in df_league_history.columns else []
+    
+    if not dates:
+        # Fallback caso a coluna date precise ser mapeada do path
+        df_league_history['date'] = df_league_history['__file_path__'].apply(lambda x: x.split('date=')[1].split('/')[0] if 'date=' in x else 'latest')
+        dates = sorted(df_league_history['date'].unique(), reverse=True)
+
+    latest_date = dates[0]
+    past_date = dates[1] if len(dates) > 1 else None
+
+    # DataFrame da execução mais recente
+    df = df_league_history[df_league_history['date'] == latest_date].copy()
+    
+    # DataFrame da execução anterior (para calcular o Delta de posição)
+    df_past = df_league_history[df_league_history['date'] == past_date].copy() if past_date else pd.DataFrame()
+
+    # Lógica de Volatilidade (Delta)
+    if not df_past.empty:
         comparison = df[['team_name', 'position']].merge(
             df_past[['team_name', 'position']], on='team_name', suffixes=('_now', '_past')
         )
@@ -60,7 +84,9 @@ if df is not None:
         col_img, col_info = st.columns([1, 4])
         with col_img:
             if 'team_crest' in filtered_df.columns:
-                st.image(filtered_df['team_crest'].values[0], width=200)
+                crest = filtered_df['team_crest'].values[0]
+                if pd.notna(crest):
+                    st.image(crest, width=200)
         with col_info:
             st.title(selected_team)
             c1, c2, c3, c4 = st.columns(4)
@@ -71,24 +97,23 @@ if df is not None:
 
     st.markdown("---")
     
+    # Gráfico de Tendência Histórica via DuckDB
     st.subheader(f"Tendência de Posição: {selected_team}")
-    base_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "gold", "standings")
-    dates = sorted([d for d in os.listdir(base_dir) if d.startswith("date=")])
     
-    history = []
-    for date_folder in dates:
-        df_hist = get_data_by_date(league_code, date_folder)
-        if df_hist is not None and not df_hist.empty and selected_team in df_hist['team_name'].values:
-            pos = df_hist[df_hist['team_name'] == selected_team]['position'].values[0]
-            history.append({'data': date_folder.replace("date=", ""), 'posicao': pos})
+    team_history_query = f"""
+        SELECT date, position as posicao 
+        FROM read_parquet('data/gold/standings/**/*.parquet', hive_partitioning=1)
+        WHERE league_code = '{league_code}' AND team_name = '{selected_team}'
+        ORDER BY date ASC
+    """
+    df_history = duckdb.query(team_history_query).to_df()
     
-    if history:
-        df_history = pd.DataFrame(history)
-        fig_trend = px.line(df_history, x='data', y='posicao', markers=True)
+    if not df_history.empty and len(df_history) > 1:
+        fig_trend = px.line(df_history, x='date', y='posicao', markers=True)
         fig_trend.update_yaxes(autorange="reversed") 
         st.plotly_chart(fig_trend, use_container_width=True)
     else:
-        st.info("Histórico insuficiente para gerar gráfico de tendência.")
+        st.info("Histórico insuficiente para gerar gráfico de tendência (execute o pipeline em dias diferentes para acumular histórico).")
 
     st.markdown("---")
     st.subheader("Comparativo de Pontuação")
@@ -105,4 +130,4 @@ if df is not None:
         use_container_width=True, hide_index=True
     )
 else:
-    st.warning("Nenhuma partição encontrada. Execute `python -m src.main` para gerar a camada Gold particionada.")
+    st.warning("Nenhuma partição encontrada. Execute `python -m src.main` para popular o Data Lake.")
