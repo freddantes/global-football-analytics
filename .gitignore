@@ -2,8 +2,10 @@
 .env
 
 # Pastas de dados
-data/
-!data/.keep
+# Ignora toda a pasta data (evita subir dados brutos ou temporários)
+data/*
+# EXCEÇÃO: Permite subir a camada Gold particionada para o Streamlit ler
+!data/gold/
 
 # Ambientes virtuais e caches
 venv/
