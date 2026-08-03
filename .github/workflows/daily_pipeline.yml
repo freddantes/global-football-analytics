@@ -3,11 +3,11 @@ name: Daily Football Pipeline & Tests
 on:
   schedule:
     - cron: '0 8 * * *' # Roda todo dia às 08:00 AM UTC
-  workflow_dispatch:     # Permite acionamento manual no site do GitHub
+  workflow_dispatch:    # Permite acionamento manual no site do GitHub
   push:
-    branches: [ main ]   # Roda testes automaticamente a cada push na branch principal
+    branches: [ main ]  # Roda testes automaticamente a cada push na branch principal
   pull_request:
-    branches: [ main ]   # Roda testes em pull requests
+    branches: [ main ]  # Roda testes em pull requests
 
 jobs:
   run-pipeline-and-tests:
@@ -35,3 +35,13 @@ jobs:
           API_KEY: ${{ secrets.API_KEY }}
           API_BASE_URL: https://api.football-data.org/v4
         run: python -m src.main
+
+      # Salva os novos arquivos Parquet gerados de volta no repositório
+      - name: Commit and Push Data
+        run: |
+          git config --global user.name 'GitHub Actions Bot'
+          git config --global user.email 'actions@github.com'
+          git add data/gold/
+          # O "|| echo" evita que o pipeline quebre se não houver dados novos para commitar
+          git commit -m "data(auto): update hive partitions" || echo "Nenhuma alteração nos dados hoje."
+          git push
