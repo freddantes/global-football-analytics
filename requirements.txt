@@ -2,7 +2,7 @@
 pandas
 pyarrow
 
-# Interação com APIs (Para o seu pipeline de ETL)
+# Interação com APIs
 requests
 
 # Estruturação e Validação de Dados
@@ -18,3 +18,6 @@ gcsfs
 # Interface e Visualização
 streamlit
 plotly
+
+# Testes Automatizados
+pytest
