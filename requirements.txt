@@ -1,10 +1,20 @@
+# Bibliotecas Principais de Dados
 pandas
-requests
-streamlit
-fastapi
-uvicorn
-python-dotenv
 pyarrow
-plotly==5.22.0
-pytest
+
+# Interação com APIs (Para o seu pipeline de ETL)
+requests
+
+# Estruturação e Validação de Dados
 pydantic
+
+# Variáveis de Ambiente e Segurança
+python-dotenv
+
+# Bancos de Dados e Nuvem
+duckdb
+gcsfs
+
+# Interface e Visualização
+streamlit
+plotly

@@ -2,11 +2,15 @@ import streamlit as st
 import pandas as pd
 import duckdb
 import os
+import json
 import plotly.express as px
 
 # Importando o novo motor estatístico de Poisson
 from src.analytics import get_match_predictions
 
+# ==========================================
+# CONFIGURAÇÃO DA PÁGINA
+# ==========================================
 st.set_page_config(page_title="Dashboard Global de Futebol", layout="wide")
 
 LEAGUES = {
@@ -18,15 +22,37 @@ LEAGUES = {
 st.title("⚽ Dashboard Global de Futebol & Analytics")
 st.markdown("---")
 
+# ==========================================
+# AUTENTICAÇÃO NO GOOGLE CLOUD (SECRETS)
+# ==========================================
+@st.cache_resource
+def configure_gcp_credentials():
+    """
+    Lê a chave de segurança do Google Cloud (GCP) dos Secrets do Streamlit
+    e cria um arquivo temporário de credenciais para autorizar a leitura dos dados.
+    """
+    if "gcp_service_account" in st.secrets:
+        gcp_cred_dict = dict(st.secrets["gcp_service_account"])
+        with open("google_credentials.json", "w") as f:
+            json.dump(gcp_cred_dict, f)
+        os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "google_credentials.json"
+        return True
+    return False
+
+# Executa a configuração de credenciais logo ao abrir o app
+configure_gcp_credentials()
+
+# ==========================================
+# EXTRAÇÃO DE DADOS (DATA LAKE NO GCP)
+# ==========================================
 @st.cache_data
 def load_standings_via_duckdb(league_code: str):
     """
     Usa o DuckDB para consultar as partições Hive da tabela de classificação
-    de forma ultra-rápida, aplicando Partition Pruning automático.
+    diretamente do Google Cloud Storage de forma ultra-rápida.
     """
-    parquet_path = os.path.join("data", "gold", "standings", "**", "*.parquet")
-    if not os.path.exists(os.path.join("data", "gold", "standings")):
-        return None
+    # Novo caminho apontando diretamente para o seu Bucket na nuvem
+    parquet_path = "gs://futebol-datalake-global-analytics-2026/data/gold/standings/**/*.parquet"
         
     query = f"""
         SELECT * 
@@ -38,7 +64,8 @@ def load_standings_via_duckdb(league_code: str):
         if df.empty:
             return None
         return df
-    except Exception:
+    except Exception as e:
+        st.error(f"Erro ao conectar com o Data Lake: {e}")
         return None
 
 # Carrega todos os dados históricos da liga selecionada
@@ -48,7 +75,8 @@ league_code = LEAGUES[selected_league_name]
 # Criando as abas de navegação
 tab_classificacao, tab_modelagem = st.tabs(["📊 Classificação Geral", "🎯 Modelagem & Prop Bets"])
 
-df_league_history = load_standings_via_duckdb(league_code)
+with st.spinner("Lendo dados do Data Lake no Google Cloud..."):
+    df_league_history = load_standings_via_duckdb(league_code)
 
 # ==========================================
 # ABA 1: CLASSIFICAÇÃO TRADICIONAL
@@ -59,7 +87,6 @@ with tab_classificacao:
         if 'date' in df_league_history.columns:
             dates = sorted(df_league_history['date'].unique(), reverse=True)
         else:
-            # Fallback caso a coluna date precise ser mapeada do path do DuckDB
             df_league_history['date'] = df_league_history['__file_path__'].apply(
                 lambda x: x.split('date=')[1].split('/')[0] if 'date=' in x else 'latest'
             )
@@ -68,13 +95,9 @@ with tab_classificacao:
         latest_date = dates[0]
         past_date = dates[1] if len(dates) > 1 else None
 
-        # DataFrame da execução mais recente
         df = df_league_history[df_league_history['date'] == latest_date].copy()
-        
-        # DataFrame da execução anterior (para calcular o Delta de posição)
         df_past = df_league_history[df_league_history['date'] == past_date].copy() if past_date else pd.DataFrame()
 
-        # Lógica de Volatilidade (Delta)
         if not df_past.empty:
             comparison = df[['team_name', 'position']].merge(
                 df_past[['team_name', 'position']], on='team_name', suffixes=('_now', '_past')
@@ -110,7 +133,7 @@ with tab_classificacao:
         
         team_history_query = f"""
             SELECT date, position as posicao 
-            FROM read_parquet('data/gold/standings/**/*.parquet', hive_partitioning=1)
+            FROM read_parquet('gs://futebol-datalake-global-analytics-2026/data/gold/standings/**/*.parquet', hive_partitioning=1)
             WHERE league_code = '{league_code}' AND team_name = '{selected_team}'
             ORDER BY date ASC
         """
@@ -121,7 +144,7 @@ with tab_classificacao:
                 fig_trend.update_yaxes(autorange="reversed") 
                 st.plotly_chart(fig_trend, use_container_width=True)
             else:
-                st.info("Histórico insuficiente para gerar gráfico de tendência (execute o pipeline em dias diferentes para acumular histórico).")
+                st.info("Histórico insuficiente para gerar gráfico de tendência.")
         except Exception:
             pass
 
@@ -141,7 +164,6 @@ with tab_classificacao:
         )
     else:
         st.warning("Nenhuma partição de classificação encontrada. Execute o pipeline ETL.")
-
 
 # ==========================================
 # ABA 2: MODELAGEM QUANTITATIVA & PROP BETS
@@ -165,7 +187,6 @@ with tab_modelagem:
         else:
             if st.button("Executar Modelo Preditivo", type="primary"):
                 with st.spinner("Lendo histórico no Data Lake e processando estatísticas..."):
-                    # Executando a lógica analítica desenvolvida na Etapa 7
                     preds = get_match_predictions(league_code, home_team_model, away_team_model)
                     
                     if preds:
