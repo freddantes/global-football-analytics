@@ -3,9 +3,8 @@
 
 # Pastas de dados
 # Ignora toda a pasta data (evita subir dados brutos ou temporários)
-data/*
-# EXCEÇÃO: Permite subir a camada Gold particionada para o Streamlit ler
-!data/gold/
+data/
+
 
 # Ambientes virtuais e caches
 venv/
