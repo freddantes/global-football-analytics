@@ -4,6 +4,8 @@ import duckdb
 import os
 import json
 import plotly.express as px
+import pyarrow.dataset as ds
+import gcsfs
 
 # Importando o novo motor estatístico de Poisson
 from src.analytics import get_match_predictions
@@ -48,30 +50,26 @@ configure_gcp_credentials()
 @st.cache_data
 def load_standings_via_duckdb(league_code: str):
     """
-    Usa o DuckDB para consultar as partições Hive da tabela de classificação
-    diretamente do Google Cloud Storage de forma ultra-rápida.
+    Usa o PyArrow para ler as partições do Google Cloud com segurança e o DuckDB 
+    para consultar os dados na memória, evitando bloqueios de rede do Streamlit.
     """
-    parquet_path = "gs://futebol-datalake-global-analytics-2026/data/gold/standings/**/*.parquet"
+    # Atenção: Quando usamos gcsfs, não colocamos 'gs://' no início, apenas o nome do bucket e a pasta
+    bucket_path = "futebol-datalake-global-analytics-2026/data/gold/standings"
         
     try:
-        # 1. Prepara o motor do DuckDB para se conectar à internet e ao GCS
-        duckdb.sql("INSTALL httpfs;")
-        duckdb.sql("LOAD httpfs;")
+        # 1. Inicia o sistema de arquivos da nuvem (ele acha o seu crachá JSON automaticamente!)
+        fs = gcsfs.GCSFileSystem()
         
-        # 2. Cria o "Segredo" usando CREDENTIAL_CHAIN (lê a variável de ambiente que já configuramos)
-        duckdb.sql("""
-            CREATE OR REPLACE SECRET gcp_secret (
-                TYPE GCS, 
-                PROVIDER CREDENTIAL_CHAIN
-            );
-        """)
+        # 2. Mapeia as partições do Data Lake usando o PyArrow
+        dataset = ds.dataset(
+            bucket_path, 
+            format="parquet", 
+            filesystem=fs, 
+            partitioning="hive"
+        )
         
-        # 3. Executa a consulta
-        query = f"""
-            SELECT * 
-            FROM read_parquet('{parquet_path}', hive_partitioning=1)
-            WHERE league_code = '{league_code}'
-        """
+        # 3. O DuckDB consegue ler a variável 'dataset' do Python diretamente da memória RAM
+        query = f"SELECT * FROM dataset WHERE league_code = '{league_code}'"
         df = duckdb.query(query).to_df()
         
         if df.empty:
