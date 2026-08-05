@@ -51,19 +51,34 @@ def load_standings_via_duckdb(league_code: str):
     Usa o DuckDB para consultar as partições Hive da tabela de classificação
     diretamente do Google Cloud Storage de forma ultra-rápida.
     """
-    # Novo caminho apontando diretamente para o seu Bucket na nuvem
     parquet_path = "gs://futebol-datalake-global-analytics-2026/data/gold/standings/**/*.parquet"
         
-    query = f"""
-        SELECT * 
-        FROM read_parquet('{parquet_path}', hive_partitioning=1)
-        WHERE league_code = '{league_code}'
-    """
     try:
+        # 1. Prepara o motor do DuckDB para se conectar à internet e ao GCS
+        duckdb.sql("INSTALL httpfs;")
+        duckdb.sql("LOAD httpfs;")
+        
+        # 2. Cria o "Segredo" no DuckDB apontando para o crachá JSON que o Streamlit gerou
+        duckdb.sql("""
+            CREATE OR REPLACE SECRET gcp_secret (
+                TYPE GCS, 
+                PROVIDER SERVICE_ACCOUNT, 
+                SERVICE_ACCOUNT_KEY 'google_credentials.json'
+            );
+        """)
+        
+        # 3. Executa a consulta
+        query = f"""
+            SELECT * 
+            FROM read_parquet('{parquet_path}', hive_partitioning=1)
+            WHERE league_code = '{league_code}'
+        """
         df = duckdb.query(query).to_df()
+        
         if df.empty:
             return None
         return df
+        
     except Exception as e:
         st.error(f"Erro ao conectar com o Data Lake: {e}")
         return None
