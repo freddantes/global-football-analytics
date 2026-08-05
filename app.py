@@ -58,12 +58,11 @@ def load_standings_via_duckdb(league_code: str):
         duckdb.sql("INSTALL httpfs;")
         duckdb.sql("LOAD httpfs;")
         
-        # 2. Cria o "Segredo" no DuckDB apontando para o crachá JSON que o Streamlit gerou
+        # 2. Cria o "Segredo" usando CREDENTIAL_CHAIN (lê a variável de ambiente que já configuramos)
         duckdb.sql("""
             CREATE OR REPLACE SECRET gcp_secret (
                 TYPE GCS, 
-                PROVIDER SERVICE_ACCOUNT, 
-                SERVICE_ACCOUNT_KEY 'google_credentials.json'
+                PROVIDER CREDENTIAL_CHAIN
             );
         """)
         
