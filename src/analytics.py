@@ -5,13 +5,15 @@ import pandas as pd
 from src.logging_config import logger
 
 # =====================================================================
-# 1. CONSULTAS SQL VIA DUCKDB (O que você já tinha construído)
+# 1. CONSULTAS SQL VIA DUCKDB (Corrigidas para Múltiplos Schemas)
 # =====================================================================
 
 def query_hive_standings(league_code: str = None) -> pd.DataFrame:
     """Consulta as partições Hive da tabela de classificação."""
     parquet_path = os.path.join("data", "gold", "standings", "**", "*.parquet")
-    query = f"SELECT * FROM read_parquet('{parquet_path}', hive_partitioning=1)"
+    
+    # Adicionado o union_by_name=True para resolver conflitos de schema entre partições vazias e preenchidas
+    query = f"SELECT * FROM read_parquet('{parquet_path}', hive_partitioning=1, union_by_name=True)"
     
     if league_code:
         query += f" WHERE league_code = '{league_code.upper()}'"
@@ -27,7 +29,9 @@ def query_hive_standings(league_code: str = None) -> pd.DataFrame:
 def query_hive_matches(league_code: str = None) -> pd.DataFrame:
     """Consulta o histórico de partidas (matches) particionadas no Hive."""
     parquet_path = os.path.join("data", "gold", "matches", "**", "*.parquet")
-    query = f"SELECT * FROM read_parquet('{parquet_path}', hive_partitioning=1)"
+    
+    # Adicionado o union_by_name=True
+    query = f"SELECT * FROM read_parquet('{parquet_path}', hive_partitioning=1, union_by_name=True)"
     
     if league_code:
         query += f" WHERE league_code = '{league_code.upper()}'"

@@ -163,7 +163,7 @@ with tab_classificacao:
                 fig_trend = px.line(df_history, x='rodada', y='posicao', markers=True)
                 fig_trend.update_yaxes(autorange="reversed") 
                 fig_trend.update_xaxes(dtick=1)
-                st.plotly_chart(fig_trend, use_container_width=True)
+                st.plotly_chart(fig_trend, width="stretch")
             else:
                 st.info("Histórico insuficiente para gerar gráfico de tendência por rodadas.")
         except Exception:
@@ -176,7 +176,7 @@ with tab_classificacao:
             x='team_name', y='points', 
             color='points', color_continuous_scale='Blues'
         )
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width="stretch")
 
         st.subheader(f"Classificação Completa: {selected_league_name}")
         
@@ -184,7 +184,7 @@ with tab_classificacao:
         df_display = df[['position', 'delta', 'team_name', 'playedGames', 'won', 'draw', 'lost', 'points', 'goalDifference', 'goals_per_game']].copy()
         df_display['goals_per_game'] = df_display['goals_per_game'].round(2)
         
-        st.dataframe(df_display, use_container_width=True, hide_index=True)
+        st.dataframe(df_display, width="stretch", hide_index=True)
         
     else:
         st.warning("Nenhuma partição de classificação encontrada. Execute o pipeline ETL.")
