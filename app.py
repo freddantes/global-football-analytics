@@ -141,12 +141,13 @@ with tab_classificacao:
         st.subheader(f"Tendência de Posição: {selected_team}")
         
         try:
-            # Reutiliza a lógica PyArrow para buscar o histórico e desenhar o gráfico
+            # Reutiliza a lógica PyArrow para buscar o histórico
             fs_trend = gcsfs.GCSFileSystem()
             dataset_trend = ds.dataset("futebol-datalake-global-analytics-2026/data/gold/standings", format="parquet", filesystem=fs_trend, partitioning="hive")
             
+            # Mudamos a query para buscar 'playedGames' (Jogos Disputados / Rodada)
             team_history_query = f"""
-                SELECT date, position as posicao 
+                SELECT playedGames as rodada, position as posicao 
                 FROM dataset_trend 
                 WHERE league_code = '{league_code}' AND team_name = '{selected_team}' 
                 ORDER BY date ASC
@@ -154,11 +155,19 @@ with tab_classificacao:
             df_history = duckdb.query(team_history_query).to_df()
             
             if not df_history.empty and len(df_history) > 1:
-                fig_trend = px.line(df_history, x='date', y='posicao', markers=True)
-                fig_trend.update_yaxes(autorange="reversed") 
+                # Removemos duplicações caso o ETL rode vários dias na mesma rodada (mantendo o status mais recente)
+                df_history = df_history.drop_duplicates(subset=['rodada'], keep='last')
+                
+                # Desenhamos o gráfico usando a 'rodada' no eixo X
+                fig_trend = px.line(df_history, x='rodada', y='posicao', markers=True)
+                fig_trend.update_yaxes(autorange="reversed")
+                
+                # Forçamos o eixo X a mostrar apenas números inteiros (não existe rodada 1.5)
+                fig_trend.update_xaxes(dtick=1)
+                
                 st.plotly_chart(fig_trend, use_container_width=True)
             else:
-                st.info("Histórico insuficiente para gerar gráfico de tendência (execute o pipeline em dias diferentes para acumular histórico).")
+                st.info("Histórico insuficiente para gerar gráfico de tendência por rodadas.")
         except Exception:
             pass
 

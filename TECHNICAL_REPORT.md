@@ -64,7 +64,7 @@ O futebol se encaixa perfeitamente nessas premissas matemáticas.
 ### 3.2 A Fórmula Matemática
 A probabilidade de um time marcar exatos $x$ gols em uma partida é dada pela fórmula:
 
-$$ P(x; \lambda) = rac{e^{-\lambda} \lambda^x}{x!} $$
+$$P(x; \lambda) = \frac{e^{-\lambda} \lambda^x}{x!}$$
 
 **Onde:**
 *   $P(x; \lambda)$ = A probabilidade de marcar $x$ gols.
