@@ -53,22 +53,16 @@ def load_standings_via_duckdb(league_code: str):
     Usa o PyArrow para ler as partições do Google Cloud com segurança e o DuckDB 
     para consultar os dados na memória, evitando bloqueios de rede do Streamlit.
     """
-    # Atenção: Quando usamos gcsfs, não colocamos 'gs://' no início, apenas o nome do bucket e a pasta
     bucket_path = "futebol-datalake-global-analytics-2026/data/gold/standings"
         
     try:
-        # 1. Inicia o sistema de arquivos da nuvem (ele acha o seu crachá JSON automaticamente!)
         fs = gcsfs.GCSFileSystem()
-        
-        # 2. Mapeia as partições do Data Lake usando o PyArrow
         dataset = ds.dataset(
             bucket_path, 
             format="parquet", 
             filesystem=fs, 
             partitioning="hive"
         )
-        
-        # 3. O DuckDB consegue ler a variável 'dataset' do Python diretamente da memória RAM
         query = f"SELECT * FROM dataset WHERE league_code = '{league_code}'"
         df = duckdb.query(query).to_df()
         
@@ -84,8 +78,12 @@ def load_standings_via_duckdb(league_code: str):
 selected_league_name = st.sidebar.selectbox("Selecione a Competição:", list(LEAGUES.keys()))
 league_code = LEAGUES[selected_league_name]
 
-# Criando as abas de navegação
-tab_classificacao, tab_modelagem = st.tabs(["📊 Classificação Geral", "🎯 Modelagem & Prop Bets"])
+# Criando as abas de navegação (Agora com a Metodologia)
+tab_classificacao, tab_modelagem, tab_metodologia = st.tabs([
+    "📊 Classificação Geral", 
+    "🎯 Modelagem & Prop Bets",
+    "📖 Metodologia Técnica"
+])
 
 with st.spinner("Lendo dados do Data Lake no Google Cloud..."):
     df_league_history = load_standings_via_duckdb(league_code)
@@ -140,23 +138,27 @@ with tab_classificacao:
 
         st.markdown("---")
         
-        # Gráfico de Tendência Histórica via DuckDB
         st.subheader(f"Tendência de Posição: {selected_team}")
         
-        team_history_query = f"""
-            SELECT date, position as posicao 
-            FROM read_parquet('gs://futebol-datalake-global-analytics-2026/data/gold/standings/**/*.parquet', hive_partitioning=1)
-            WHERE league_code = '{league_code}' AND team_name = '{selected_team}'
-            ORDER BY date ASC
-        """
         try:
+            # Reutiliza a lógica PyArrow para buscar o histórico e desenhar o gráfico
+            fs_trend = gcsfs.GCSFileSystem()
+            dataset_trend = ds.dataset("futebol-datalake-global-analytics-2026/data/gold/standings", format="parquet", filesystem=fs_trend, partitioning="hive")
+            
+            team_history_query = f"""
+                SELECT date, position as posicao 
+                FROM dataset_trend 
+                WHERE league_code = '{league_code}' AND team_name = '{selected_team}' 
+                ORDER BY date ASC
+            """
             df_history = duckdb.query(team_history_query).to_df()
+            
             if not df_history.empty and len(df_history) > 1:
                 fig_trend = px.line(df_history, x='date', y='posicao', markers=True)
                 fig_trend.update_yaxes(autorange="reversed") 
                 st.plotly_chart(fig_trend, use_container_width=True)
             else:
-                st.info("Histórico insuficiente para gerar gráfico de tendência.")
+                st.info("Histórico insuficiente para gerar gráfico de tendência (execute o pipeline em dias diferentes para acumular histórico).")
         except Exception:
             pass
 
@@ -217,3 +219,20 @@ with tab_modelagem:
                         st.warning("Histórico insuficiente na tabela de partidas para calcular a força de ataque/defesa destas equipes.")
     else:
         st.warning("Nenhum dado encontrado para alimentar o modelo matemático.")
+
+# ==========================================
+# ABA 3: METODOLOGIA TÉCNICA
+# ==========================================
+with tab_metodologia:
+    st.header("Documentação Arquitetural e Estatística")
+    
+    try:
+        # A função 'open' vai ler o arquivo Markdown que está na raiz do projeto
+        with open("TECHNICAL_REPORT.md", "r", encoding="utf-8") as file:
+            conteudo_markdown = file.read()
+            
+        # Exibe o conteúdo formatado nativamente no Streamlit
+        st.markdown(conteudo_markdown, unsafe_allow_html=True)
+        
+    except FileNotFoundError:
+        st.error("O arquivo TECHNICAL_REPORT.md não foi encontrado. Certifique-se de que ele está na mesma pasta raiz do app.py.")
