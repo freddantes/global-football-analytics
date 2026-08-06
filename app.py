@@ -78,7 +78,7 @@ def load_standings_via_duckdb(league_code: str):
 selected_league_name = st.sidebar.selectbox("Selecione a Competição:", list(LEAGUES.keys()))
 league_code = LEAGUES[selected_league_name]
 
-# Criando as abas de navegação (Agora com a Metodologia)
+# Criando as abas de navegação
 tab_classificacao, tab_modelagem, tab_metodologia = st.tabs([
     "📊 Classificação Geral", 
     "🎯 Modelagem & Prop Bets",
@@ -133,7 +133,11 @@ with tab_classificacao:
                 c1, c2, c3, c4 = st.columns(4)
                 c1.metric("Posição", int(filtered_df['position'].values[0]), delta=int(filtered_df['delta'].values[0]))
                 c2.metric("Pontos", int(filtered_df['points'].values[0]))
-                c3.metric("Gols/Jogo", filtered_df['goals_per_game'].values[0])
+                
+                # Formatando a métrica para exibir apenas 2 casas decimais
+                gols_por_jogo = float(filtered_df['goals_per_game'].values[0])
+                c3.metric("Gols/Jogo", f"{gols_por_jogo:.2f}")
+                
                 c4.metric("Aproveitamento", f"{int(filtered_df['points_pct'].values[0]*100)}%")
 
         st.markdown("---")
@@ -141,11 +145,11 @@ with tab_classificacao:
         st.subheader(f"Tendência de Posição: {selected_team}")
         
         try:
-            # Reutiliza a lógica PyArrow para buscar o histórico
+            # Reutiliza a lógica PyArrow para buscar o histórico e desenhar o gráfico
             fs_trend = gcsfs.GCSFileSystem()
             dataset_trend = ds.dataset("futebol-datalake-global-analytics-2026/data/gold/standings", format="parquet", filesystem=fs_trend, partitioning="hive")
             
-            # Mudamos a query para buscar 'playedGames' (Jogos Disputados / Rodada)
+            # Buscando por rodada ao invés de data
             team_history_query = f"""
                 SELECT playedGames as rodada, position as posicao 
                 FROM dataset_trend 
@@ -155,16 +159,10 @@ with tab_classificacao:
             df_history = duckdb.query(team_history_query).to_df()
             
             if not df_history.empty and len(df_history) > 1:
-                # Removemos duplicações caso o ETL rode vários dias na mesma rodada (mantendo o status mais recente)
                 df_history = df_history.drop_duplicates(subset=['rodada'], keep='last')
-                
-                # Desenhamos o gráfico usando a 'rodada' no eixo X
                 fig_trend = px.line(df_history, x='rodada', y='posicao', markers=True)
-                fig_trend.update_yaxes(autorange="reversed")
-                
-                # Forçamos o eixo X a mostrar apenas números inteiros (não existe rodada 1.5)
+                fig_trend.update_yaxes(autorange="reversed") 
                 fig_trend.update_xaxes(dtick=1)
-                
                 st.plotly_chart(fig_trend, use_container_width=True)
             else:
                 st.info("Histórico insuficiente para gerar gráfico de tendência por rodadas.")
@@ -181,10 +179,13 @@ with tab_classificacao:
         st.plotly_chart(fig, use_container_width=True)
 
         st.subheader(f"Classificação Completa: {selected_league_name}")
-        st.dataframe(
-            df[['position', 'delta', 'team_name', 'playedGames', 'won', 'draw', 'lost', 'points', 'goalDifference', 'goals_per_game']], 
-            use_container_width=True, hide_index=True
-        )
+        
+        # Preparando a tabela de exibição e limitando as casas decimais da coluna inteira
+        df_display = df[['position', 'delta', 'team_name', 'playedGames', 'won', 'draw', 'lost', 'points', 'goalDifference', 'goals_per_game']].copy()
+        df_display['goals_per_game'] = df_display['goals_per_game'].round(2)
+        
+        st.dataframe(df_display, use_container_width=True, hide_index=True)
+        
     else:
         st.warning("Nenhuma partição de classificação encontrada. Execute o pipeline ETL.")
 
@@ -236,11 +237,9 @@ with tab_metodologia:
     st.header("Documentação Arquitetural e Estatística")
     
     try:
-        # A função 'open' vai ler o arquivo Markdown que está na raiz do projeto
         with open("TECHNICAL_REPORT.md", "r", encoding="utf-8") as file:
             conteudo_markdown = file.read()
             
-        # Exibe o conteúdo formatado nativamente no Streamlit
         st.markdown(conteudo_markdown, unsafe_allow_html=True)
         
     except FileNotFoundError:
