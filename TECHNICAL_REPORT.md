@@ -88,3 +88,29 @@ Uma vez que o Python calcula a probabilidade de todos os placares possíveis (1x
 *   **Over/Under 2.5 Gols:** Somamos as probabilidades dos placares cujo total de gols é 0, 1 ou 2 para obter a linha de "Under". Todo o resto compõe o "Over".
 
 Essas métricas preditivas permitem identificar discrepâncias de valor entre o modelo matemático e as casas de apostas no longo prazo.
+
+---
+
+## 4. Validação Quantitativa: O Motor de Backtesting
+
+Para que um modelo de Poisson tenha valor institucional, prever quem vai ganhar a partida é irrelevante se não houver um comparativo direto com o mercado financeiro. Por isso, a plataforma conta com um Motor de Simulação Retrospectiva (*Backtesting Engine*).
+
+### 4.1 O Conceito de Valor Esperado (+EV)
+Na análise quantitativa esportiva, não buscamos prever o futuro com certeza absoluta. Buscamos situações onde as Casas de Câmbio Esportivo (como a Pinnacle) "erraram o preço" de uma probabilidade. Esse conceito é chamado de **Valor Esperado Positivo (+EV)**.
+
+**Analogia Simples:** 
+Imagine uma moeda perfeitamente equilibrada (50% cara, 50% coroa). Se alguém te oferecer pagar o triplo do valor apostado toda vez que der cara, você deve aceitar. Você ainda perderá metade das vezes, mas, a longo prazo, o prêmio desproporcional garante um lucro matemático inevitável. O nosso modelo procura essas "moedas desreguladas" no mercado de futebol.
+
+### 4.2 Como o Simulador Funciona
+O script de validação viaja no tempo para o início de uma temporada histórica (ex: 2023) e executa o seguinte fluxo cego:
+
+1.  **Ocultação da Realidade:** O script isola o jogo e esconde o resultado real que aconteceu no passado.
+2.  **Cálculo Próprio:** O nosso algoritmo calcula a probabilidade justa do evento usando a modelagem de Poisson e o decaimento temporal (memória da equipe).
+3.  **Comparação de Linhas:** Ele compara a nossa probabilidade decimal $p$ com a cotação de fechamento (*Closing Line*) oferecida pelo mercado $o$.
+4.  **A Regra de Ouro (A Equação do Valor):** A aposta só é registrada se a equação abaixo resultar em um número maior que zero:
+    
+    $$EV = (p \times o) - 1$$
+
+5.  **Liquidação Financeira:** O script avança no tempo, verifica o resultado real do jogo e atualiza uma "banca bancária virtual", registrando lucros ou perdas baseados em *Flat Staking* (unidades fixas).
+
+No final do processo, o sistema gera um relatório de **ROI (Return on Investment)**, provando matematicamente se o algoritmo preditivo tem borda competitiva contra as linhas profissionais de apostas.

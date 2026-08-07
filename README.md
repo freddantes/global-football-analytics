@@ -14,6 +14,7 @@ This project follows a professional **ETL (Extract, Transform, Load)** pattern:
 ## 🚀 Key Features
 *   **Automated Pipeline:** Daily data ingestion via GitHub Actions.
 *   **Data Quality:** Fully tested transformation logic using `pytest`.
+*   **Quantitative Backtesting Engine:** Built-in financial simulator to validate model profitability against historical closing odds (Pinnacle) using Expected Value (+EV) calculations.
 *   **Advanced Analytics:** Volatility analysis (delta position) and historical trend visualization.
 *   **Interactive Dashboard:** Built with `streamlit`.
 
