@@ -14,13 +14,14 @@ def run_backtest():
     
     # 1. Carrega os jogos locais via DuckDB
     # Apontamos para o diretório local onde o backfill salvou os dados
-    local_path = os.path.join("data", "gold", "matches", "**", "*.parquet")
+    # local_path = os.path.join("data", "gold", "matches", "**", "*.parquet") # apenas para teste local
+    # 1. Carrega os jogos da Nuvem (Produção) via DuckDB
+    bucket_path = "gs://futebol-datalake-global-analytics-2026/data/gold/matches/**/*.parquet"
     
     try:
-        # Puxa apenas os jogos de 2023 para o backtest
-        # CORREÇÃO: Transformamos a data em VARCHAR (texto) para o LIKE funcionar
+        # Puxa apenas os jogos de 2023 para o backtest direto do Google Cloud
         query = f"""
-            SELECT * FROM read_parquet('{local_path}')
+            SELECT * FROM read_parquet('{bucket_path}')
             WHERE league_code = 'BSA' AND CAST(date AS VARCHAR) LIKE '2023-%'
             ORDER BY date ASC
         """
