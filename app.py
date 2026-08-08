@@ -11,9 +11,19 @@ import gcsfs
 from src.analytics import get_match_predictions
 
 # ==========================================
-# CONFIGURAÇÃO DA PÁGINA
+# CONFIGURAÇÃO DA PÁGINA E CSS (Design Profissional)
 # ==========================================
 st.set_page_config(page_title="Dashboard Global de Futebol", layout="wide")
+
+# Oculta o menu superior direito (hamburguer) e o rodapé "Made with Streamlit"
+hide_st_style = """
+            <style>
+            #MainMenu {visibility: hidden;}
+            footer {visibility: hidden;}
+            header {visibility: hidden;}
+            </style>
+            """
+st.markdown(hide_st_style, unsafe_allow_html=True)
 
 LEAGUES = {
     "Premier League": "PL", "Copa do Mundo": "WC", "Champions League": "CL",
@@ -21,24 +31,32 @@ LEAGUES = {
     "La Liga": "PD", "Ligue 1": "FL1", "Serie A Italiana": "SA", "Bundesliga": "BL1"
 }
 
-st.title("⚽ Dashboard Global de Futebol & Analytics")
-st.markdown("---")
-
 # ==========================================
 # AUTENTICAÇÃO NO GOOGLE CLOUD (SECRETS)
 # ==========================================
 @st.cache_resource
 def configure_gcp_credentials():
     """
-    Lê a chave de segurança do Google Cloud (GCP) dos Secrets do Streamlit
-    e cria um arquivo temporário de credenciais para autorizar a leitura dos dados.
+    Configuração resiliente: Tenta usar o arquivo local primeiro. 
+    Se não encontrar, tenta buscar no cofre de segredos da nuvem (Streamlit Cloud).
     """
-    if "gcp_service_account" in st.secrets:
-        gcp_cred_dict = dict(st.secrets["gcp_service_account"])
-        with open("google_credentials.json", "w") as f:
-            json.dump(gcp_cred_dict, f)
+    # Cenário 1: Ambiente Local (O crachá físico já existe na pasta)
+    if os.path.exists("google_credentials.json"):
         os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "google_credentials.json"
         return True
+        
+    # Cenário 2: Ambiente de Produção (Streamlit Cloud)
+    try:
+        if "gcp_service_account" in st.secrets:
+            gcp_cred_dict = dict(st.secrets["gcp_service_account"])
+            with open("google_credentials.json", "w") as f:
+                json.dump(gcp_cred_dict, f)
+            os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "google_credentials.json"
+            return True
+    except Exception:
+        # Se o cofre st.secrets não existir, o código ignora o erro silenciosamente
+        pass
+        
     return False
 
 # Executa a configuração de credenciais logo ao abrir o app
@@ -74,24 +92,36 @@ def load_standings_via_duckdb(league_code: str):
         st.error(f"Erro ao conectar com o Data Lake: {e}")
         return None
 
+# ==========================================
+# MENU DE NAVEGAÇÃO LATERAL (Sidebar)
+# ==========================================
+st.sidebar.markdown("### 🧭 Menu Principal")
+
+# Botões de navegação lateral
+pagina_selecionada = st.sidebar.radio(
+    "Escolha o módulo:",
+    ["📊 Classificação Geral", "🎯 Simulador Quantitativo", "📖 Metodologia Técnica"]
+)
+
+st.sidebar.markdown("---")
+st.sidebar.markdown("### ⚙️ Filtros Globais")
 # Carrega todos os dados históricos da liga selecionada
 selected_league_name = st.sidebar.selectbox("Selecione a Competição:", list(LEAGUES.keys()))
 league_code = LEAGUES[selected_league_name]
 
-# Criando as abas de navegação
-tab_classificacao, tab_modelagem, tab_metodologia = st.tabs([
-    "📊 Classificação Geral", 
-    "🎯 Modelagem & Prop Bets",
-    "📖 Metodologia Técnica"
-])
 
+# Lendo os dados no background com o spinner
 with st.spinner("Lendo dados do Data Lake no Google Cloud..."):
     df_league_history = load_standings_via_duckdb(league_code)
 
 # ==========================================
-# ABA 1: CLASSIFICAÇÃO TRADICIONAL
+# RENDERIZAÇÃO DA TELA PRINCIPAL
 # ==========================================
-with tab_classificacao:
+
+if pagina_selecionada == "📊 Classificação Geral":
+    st.title(f"⚽ Classificação Geral - {selected_league_name}")
+    st.markdown("---")
+    
     if df_league_history is not None and not df_league_history.empty:
         # Identifica as datas disponíveis ordenadas cronologicamente
         if 'date' in df_league_history.columns:
@@ -118,7 +148,9 @@ with tab_classificacao:
             df['delta'] = 0
 
         team_list = sorted(df['team_name'].unique())
-        selected_team = st.sidebar.selectbox("Selecione o Time para Destaque:", team_list)
+        
+        # Movemos o filtro de time para a tela principal (já que ele só importa nesta aba)
+        selected_team = st.selectbox("Selecione o Time para Destaque (Desempenho Individual):", team_list)
         filtered_df = df[df['team_name'] == selected_team]
         
         with st.container():
@@ -141,7 +173,6 @@ with tab_classificacao:
                 c4.metric("Aproveitamento", f"{int(filtered_df['points_pct'].values[0]*100)}%")
 
         st.markdown("---")
-        
         st.subheader(f"Tendência de Posição: {selected_team}")
         
         try:
@@ -170,7 +201,7 @@ with tab_classificacao:
             pass
 
         st.markdown("---")
-        st.subheader("Comparativo de Pontuação")
+        st.subheader("Comparativo de Pontuação Geral")
         fig = px.bar(
             df.sort_values('points', ascending=False), 
             x='team_name', y='points', 
@@ -178,7 +209,7 @@ with tab_classificacao:
         )
         st.plotly_chart(fig, width="stretch")
 
-        st.subheader(f"Classificação Completa: {selected_league_name}")
+        st.subheader("Tabela de Classificação Completa")
         
         # Preparando a tabela de exibição e limitando as casas decimais da coluna inteira
         df_display = df[['position', 'delta', 'team_name', 'playedGames', 'won', 'draw', 'lost', 'points', 'goalDifference', 'goals_per_game']].copy()
@@ -189,12 +220,10 @@ with tab_classificacao:
     else:
         st.warning("Nenhuma partição de classificação encontrada. Execute o pipeline ETL.")
 
-# ==========================================
-# ABA 2: MODELAGEM QUANTITATIVA & PROP BETS
-# ==========================================
-with tab_modelagem:
-    st.header("🔮 Simulador Quantitativo (Distribuição de Poisson)")
-    st.markdown("Calcula probabilidades baseadas na Força de Ataque e Defesa histórica de cada equipe no campeonato, processadas via DuckDB.")
+elif pagina_selecionada == "🎯 Simulador Quantitativo":
+    st.title("🎯 Simulador Quantitativo (Distribuição de Poisson)")
+    st.markdown("Calcula probabilidades baseadas na Força de Ataque e Defesa histórica de cada equipe no campeonato, processadas em tempo real via DuckDB e balanceadas pelo decaimento temporal (*Time Decay*).")
+    st.markdown("---")
     
     if df_league_history is not None and not df_league_history.empty:
         team_list_model = sorted(df_league_history['team_name'].unique())
@@ -210,7 +239,7 @@ with tab_modelagem:
             st.error("Por favor, selecione equipes diferentes para o confronto.")
         else:
             if st.button("Executar Modelo Preditivo", type="primary"):
-                with st.spinner("Lendo histórico no Data Lake e processando estatísticas..."):
+                with st.spinner("Lendo histórico no Data Lake e processando estatísticas matemáticas..."):
                     preds = get_match_predictions(league_code, home_team_model, away_team_model)
                     
                     if preds:
@@ -224,23 +253,21 @@ with tab_modelagem:
                         pc1, pc2, pc3 = st.columns(3)
                         pc1.metric("Expected Goals (xG) Mandante", preds['home_xg'])
                         pc2.metric("Expected Goals (xG) Visitante", preds['away_xg'])
-                        pc3.metric("Prob. Over 2.5 Gols", f"{preds['over_2_5_pct']}%")
+                        pc3.metric("Probabilidade Over 2.5 Gols", f"{preds['over_2_5_pct']}%")
                     else:
-                        st.warning("Histórico insuficiente na tabela de partidas para calcular a força de ataque/defesa destas equipes.")
+                        st.warning("Histórico insuficiente na tabela de partidas para calcular a força de ataque/defesa destas equipes com segurança estatística.")
     else:
         st.warning("Nenhum dado encontrado para alimentar o modelo matemático.")
 
-# ==========================================
-# ABA 3: METODOLOGIA TÉCNICA
-# ==========================================
-with tab_metodologia:
-    st.header("Documentação Arquitetural e Estatística")
-    
+elif pagina_selecionada == "📖 Metodologia Técnica":
+    st.title("📖 Documentação e Arquitetura")
+    st.markdown("---")
     try:
         with open("TECHNICAL_REPORT.md", "r", encoding="utf-8") as file:
             conteudo_markdown = file.read()
             
-        st.markdown(conteudo_markdown, unsafe_allow_html=True)
+        # Utilizamos o st.write, que possui integração 100% nativa com o motor Mermaid
+        st.write(conteudo_markdown)
         
     except FileNotFoundError:
-        st.error("O arquivo TECHNICAL_REPORT.md não foi encontrado. Certifique-se de que ele está na mesma pasta raiz do app.py.")
+        st.error("O arquivo TECHNICAL_REPORT.md não foi encontrado. Certifique-se de que ele está na mesma pasta raiz do projeto.")
