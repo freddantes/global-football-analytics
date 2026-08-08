@@ -6,7 +6,7 @@ import pandas as pd
 from src.logging_config import logger
 
 # =====================================================================
-# 1. CONSULTAS SQL VIA DUCKDB (Corrigidas para Múltiplos Schemas)
+# 1. CONSULTAS SQL VIA DUCKDB
 # =====================================================================
 
 def query_hive_standings(league_code: str = None) -> pd.DataFrame:
@@ -47,45 +47,59 @@ def query_hive_matches(league_code: str = None) -> pd.DataFrame:
 
 def _calculate_poisson_probability(lam: float, k: int) -> float:
     """Calcula a probabilidade exata (Poisson) de ocorrer k eventos com média lam."""
-    if lam <= 0:
+    if lam <= 0 or math.isnan(lam):
         return 0.0
     return ((lam ** k) * math.exp(-lam)) / math.factorial(k)
 
-def get_match_predictions(league_code: str, home_team: str, away_team: str) -> dict:
+# NOVA ASSINATURA: Adicionamos o parâmetro opcional 'match_date'
+def get_match_predictions(league_code: str, home_team: str, away_team: str, match_date: str = None) -> dict:
     """Gera probabilidades de Vitória, Empate, Derrota e Over 2.5 Gols aplicando Time Decay."""
     df = query_hive_matches(league_code)
     
     if df is None or df.empty:
         return None
 
+    # Filtra jogos válidos e DROP NA: Blindagem contra o veneno do 'nan'
     df_finished = df[df['status'].isin(['FINISHED', 'IN_PLAY'])].copy()
+    df_finished = df_finished.dropna(subset=['home_goals', 'away_goals'])
     
+    # -----------------------------------------------------------------
+    # PROTEÇÃO CONTRA VAZAMENTO DE DADOS (TIME TRAVEL)
+    # -----------------------------------------------------------------
+    df_finished['utc_date'] = pd.to_datetime(df_finished['utc_date'])
+    
+    # Se uma data de jogo for informada (Backtest), cortamos o passado estritamente ANTES desse jogo
+    if match_date:
+        current_match_date = pd.to_datetime(match_date)
+        df_finished = df_finished[df_finished['utc_date'] < current_match_date]
+        data_referencia = current_match_date
+    else:
+        # Se for o painel ao vivo (Streamlit), a referência é o jogo mais recente da base
+        data_referencia = df_finished['utc_date'].max()
+    
+    # Valida se sobraram jogos suficientes no passado para o cálculo
     if df_finished.empty or len(df_finished) < 20:
         return None
 
     # -----------------------------------------------------------------
     # INÍCIO DO CÁLCULO DE DECAIMENTO TEMPORAL (TIME DECAY)
     # -----------------------------------------------------------------
-    # 1. Garante que as datas são tratadas como objetos de tempo
-    df_finished['utc_date'] = pd.to_datetime(df_finished['utc_date'])
+    df_finished['dias_atras'] = (data_referencia - df_finished['utc_date']).dt.days
     
-    # 2. Encontra qual foi o último jogo disputado no banco de dados
-    data_mais_recente = df_finished['utc_date'].max()
+    # Evita dias negativos em caso de dados inconsistentes
+    df_finished['dias_atras'] = df_finished['dias_atras'].clip(lower=0)
     
-    # 3. Calcula quantos dias se passaram do jogo em questão até a data mais recente
-    df_finished['dias_atras'] = (data_mais_recente - df_finished['utc_date']).dt.days
-    
-    # 4. Aplica a curva exponencial de decaimento (Meia-vida baseada em uma temporada ~365 dias)
     df_finished['peso'] = np.exp(-df_finished['dias_atras'] / 365)
 
     def media_ponderada(dataframe, coluna):
         """Função auxiliar para calcular a média usando a coluna 'peso'."""
         if dataframe.empty or dataframe['peso'].sum() == 0: 
             return 0.0
+        # O NumPy calcula a média perfeitamente agora, pois garantimos que não há NaNs
         return np.average(dataframe[coluna], weights=dataframe['peso'])
     # -----------------------------------------------------------------
 
-    # Médias Globais da Liga Ponderadas (Jogos recentes puxam a média com mais força)
+    # Médias Globais da Liga Ponderadas
     league_avg_home_goals = media_ponderada(df_finished, 'home_goals')
     league_avg_away_goals = media_ponderada(df_finished, 'away_goals')
 
