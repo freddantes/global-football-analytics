@@ -5,7 +5,19 @@
 A professional-grade, automated data pipeline and dashboard designed to extract, transform, and analyze football data from multiple global competitions. Built with a focus on modularity, data quality, and scalability.
 
 ## 🏗️ Architecture & Engineering
-This project follows a professional **ETL (Extract, Transform, Load)** pattern:
+This project follows a professional **ETL (Extract, Transform, Load)** pattern. Below is the visual data flow of the architecture:
+
+```mermaid
+graph LR
+    A[External API] -->|Python requests| B(Raw Layer - JSON)
+    B -->|pytest + pandas| C(Gold Layer - Parquet files)
+    C -->|streamlit| D[Interactive Dashboard & Backtesting]
+    
+    subgraph CI/CD
+    E[GitHub Actions] -.->|Automated Ingestion| A
+    end
+```
+
 *   **Extract (`src/extract.py`):** Handles API communication and raw data retrieval.
 *   **Transform (`src/transform.py`):** Encapsulates business logic, data normalization, and KPI calculations. Logic is validated via unit tests.
 *   **Load (`src/load.py`):** Manages data persistence using versioned Parquet files.
@@ -25,7 +37,7 @@ This project follows a professional **ETL (Extract, Transform, Load)** pattern:
 - **Automation/Testing:** `pytest`, GitHub Actions
 
 ## 📋 Local Setup
-1. **Clone the repository:** `git clone https://github.com/freddantes/global-football-analytics.git`
+1. **Clone the repository:** `git clone [https://github.com/freddantes/global-football-analytics.git](https://github.com/freddantes/global-football-analytics.git)`
 2. **Install dependencies:** `pip install -r requirements.txt`
 3. **Configure Environment:** Create a `.env` file with your `API_KEY`.
 4. **Run Pipeline:** `python -m src.main`
