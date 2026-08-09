@@ -10,6 +10,7 @@ pydantic
 
 # Variáveis de Ambiente e Segurança
 python-dotenv
+google-auth
 
 # Bancos de Dados e Nuvem
 duckdb
@@ -21,3 +22,7 @@ plotly
 
 # Testes Automatizados
 pytest
+
+# APIs e Servidor
+fastapi
+uvicorn
