@@ -59,7 +59,7 @@ configure_gcp_credentials()
 # ==========================================
 @st.cache_data
 def load_standings_via_duckdb(league_code: str):
-    bucket_path = "futebol-datalake-global-analytics-2026/data/gold/standings"
+    bucket_path = "data/gold/standings"
         
     try:
         fs = gcsfs.GCSFileSystem()
@@ -202,7 +202,7 @@ if pagina_selecionada == "📊 Classificação":
         st.subheader(f"Tendência de Posição")
         try:
             fs_trend = gcsfs.GCSFileSystem()
-            dataset_trend = ds.dataset("futebol-datalake-global-analytics-2026/data/gold/standings", format="parquet", filesystem=fs_trend, partitioning="hive")
+            dataset_trend = ds.dataset("data/gold/standings", format="parquet", filesystem=fs_trend, partitioning="hive")
             
             team_history_query = f"""
                 SELECT playedGames as rodada, position as posicao 
@@ -228,7 +228,7 @@ if pagina_selecionada == "📊 Classificação":
 
 elif pagina_selecionada == "🎯 Simulador Quantitativo":
     st.title("🎯 Simulador Quantitativo (Distribuição de Poisson)")
-    st.markdown("Calcula probabilidades baseadas na Força de Ataque e Defesa histórica de cada equipe no campeonato, processadas em tempo real via DuckDB e balanceadas pelo decaimento temporal (*Time Decay*).")
+    st.markdown("Calcula probabilidades baseadas na Força de Ataque e Defesa histórica de cada equipe, processadas via DuckDB e balanceadas pelo decaimento temporal (*Time Decay*).")
     
     if df_league_history is not None and not df_league_history.empty:
         team_list_model = sorted(df_league_history['team_name'].unique())
@@ -243,24 +243,70 @@ elif pagina_selecionada == "🎯 Simulador Quantitativo":
         if home_team_model == away_team_model:
             st.error("Por favor, selecione equipes diferentes para o confronto.")
         else:
+            st.markdown("---")
+            st.markdown("### 💰 Analisador de Valor Esperado (+EV)")
+            st.markdown("Insira as *Odds* (cotações) oferecidas pela casa de apostas para verificar se há vantagem matemática sobre o mercado.")
+            
+            # Entradas de Dados para as Cotações
+            col_odd1, col_oddX, col_odd2 = st.columns(3)
+            with col_odd1:
+                odd_home = st.number_input(f"Odd Vitória {home_team_model}:", min_value=1.01, value=2.00, step=0.05)
+            with col_oddX:
+                odd_draw = st.number_input("Odd Empate:", min_value=1.01, value=3.00, step=0.05)
+            with col_odd2:
+                odd_away = st.number_input(f"Odd Vitória {away_team_model}:", min_value=1.01, value=2.00, step=0.05)
+
+            st.markdown("---")
+
             if st.button("Executar Modelo Preditivo", type="primary", use_container_width=True):
-                with st.spinner("Processando estatísticas matemáticas..."):
+                with st.spinner("Processando estatísticas matemáticas e comparando com o mercado..."):
                     preds = get_match_predictions(league_code, home_team_model, away_team_model)
                     
                     if preds:
+                        # Convertendo as porcentagens para decimais padrão (ex: 45.5% vira 0.455)
+                        prob_home_decimal = preds['home_win_pct'] / 100
+                        prob_draw_decimal = preds['draw_pct'] / 100
+                        prob_away_decimal = preds['away_win_pct'] / 100
+
+                        # Fórmula Matemática do Expected Value (EV)
+                        ev_home = (prob_home_decimal * odd_home) - 1
+                        ev_draw = (prob_draw_decimal * odd_draw) - 1
+                        ev_away = (prob_away_decimal * odd_away) - 1
+
                         st.markdown("### 📊 Probabilidades do Confronto (Moneyline)")
                         mc1, mc2, mc3 = st.columns(3)
                         mc1.metric(f"Vitória - {home_team_model}", f"{preds['home_win_pct']}%")
                         mc2.metric("Empate", f"{preds['draw_pct']}%")
                         mc3.metric(f"Vitória - {away_team_model}", f"{preds['away_win_pct']}%")
                         
+                        # Bloco Visual do Radar de Oportunidades (+EV)
+                        st.markdown("### 🚨 Radar de Valor Esperado (EV)")
+                        
+                        ev_found = False 
+                        
+                        if ev_home > 0:
+                            st.success(f"**🔥 OPORTUNIDADE (+EV):** Apostar no **{home_team_model}** tem um retorno esperado de **+{ev_home*100:.2f}%** a longo prazo.")
+                            ev_found = True
+                            
+                        if ev_draw > 0:
+                            st.success(f"**🔥 OPORTUNIDADE (+EV):** Apostar no **Empate** tem um retorno esperado de **+{ev_draw*100:.2f}%** a longo prazo.")
+                            ev_found = True
+                            
+                        if ev_away > 0:
+                            st.success(f"**🔥 OPORTUNIDADE (+EV):** Apostar no **{away_team_model}** tem um retorno esperado de **+{ev_away*100:.2f}%** a longo prazo.")
+                            ev_found = True
+
+                        if not ev_found:
+                            st.warning("⚠️ **Nenhuma oportunidade detectada (-EV).** As cotações da casa não possuem margem de valor frente às estatísticas. Fique de fora.")
+
+                        st.markdown("---")
                         st.markdown("### 🎯 Mercado de Gols (Prop Bets)")
                         pc1, pc2, pc3 = st.columns(3)
                         pc1.metric("Expected Goals (xG) Mandante", preds['home_xg'])
                         pc2.metric("Expected Goals (xG) Visitante", preds['away_xg'])
                         pc3.metric("Probabilidade Over 2.5 Gols", f"{preds['over_2_5_pct']}%")
                     else:
-                        st.warning("Histórico insuficiente na tabela de partidas para calcular a força de ataque/defesa destas equipes com segurança estatística.")
+                        st.error("Histórico insuficiente na tabela de partidas para calcular a força de ataque/defesa destas equipes com segurança estatística.")
     else:
         st.warning("Nenhum dado encontrado para alimentar o modelo matemático.")
 
