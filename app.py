@@ -63,12 +63,37 @@ def load_standings_via_duckdb(league_code: str):
         
     try:
         fs = gcsfs.GCSFileSystem()
+        
+        # 1. Encontra todos os arquivos parquet do bucket
+        arquivos = fs.glob(f"{bucket_path}/**/*.parquet")
+        if not arquivos:
+            return None
+            
+        # 2. Ordena de forma reversa (garante que o arquivo mais recente seja o [0])
+        arquivos.sort(reverse=True)
+        
+        # 3. Lê apenas os metadados (cabeçalho) do arquivo mais novo para capturar a coluna 'crest'
+        import pyarrow.parquet as pq
+        import pyarrow as pa
+        
+        with fs.open(arquivos[0]) as f:
+            esquema_atualizado = pq.read_schema(f)
+        
+        # 4. Adiciona as partições do Hive ao esquema para o PyArrow não quebrar
+        if 'date' not in esquema_atualizado.names:
+            esquema_atualizado = esquema_atualizado.append(pa.field('date', pa.string()))
+        if 'league_code' not in esquema_atualizado.names:
+            esquema_atualizado = esquema_atualizado.append(pa.field('league_code', pa.string()))
+        
+        # 5. Carrega o dataset IMPONDO o esquema atualizado
         dataset = ds.dataset(
             bucket_path, 
             format="parquet", 
             filesystem=fs, 
-            partitioning="hive"
+            partitioning="hive",
+            schema=esquema_atualizado
         )
+        
         query = f"SELECT * FROM dataset WHERE league_code = '{league_code}'"
         df = duckdb.query(query).to_df()
         
@@ -167,6 +192,7 @@ if pagina_selecionada == "📊 Classificação":
         selected_team = st.selectbox("Selecione a Equipe para detalhar:", team_list)
         
         filtered_df = df[df['team_name'] == selected_team]
+
         
         with st.container(border=True):
             col_img, col_info = st.columns([1, 5])
