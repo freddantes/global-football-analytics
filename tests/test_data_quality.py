@@ -4,6 +4,11 @@ import pytest
 import os
 
 def test_no_duplicate_teams_in_gold_layer():
+    """
+    Garante que não existem registros duplicados para o mesmo time, 
+    na mesma liga e na mesma rodada/data, preservando a base histórica 
+    necessária para os gráficos de tendência.
+    """
     # Caminho base usando padrão glob para abranger as partições Hive (*/**/*.parquet)
     gold_path = os.path.join("data", "gold", "standings", "**", "*.parquet")
     
@@ -22,9 +27,15 @@ def test_no_duplicate_teams_in_gold_layer():
     if df.empty:
         pytest.skip("Nenhum dado encontrado nas partições da camada Gold.")
 
-    # Verificamos se há duplicatas na combinação de chaves que deveria ser única
-    duplicatas = df.duplicated(subset=['team_name', 'league_code'])
-    
+    # Define dinamicamente as colunas de unicidade considerando a dimensão temporal do histórico
+    cols_to_check = ['team_name', 'league_code']
+    if 'matchday' in df.columns:
+        cols_to_check.append('matchday')
+    elif 'date' in df.columns:
+        cols_to_check.append('date')
+
+    # Verificamos se há duplicatas reais dentro do mesmo recorte temporal
+    duplicatas = df.duplicated(subset=cols_to_check)
     total_duplicatas = duplicatas.sum()
     
-    assert total_duplicatas == 0, f"Alerta Crítico: Foram encontradas {total_duplicatas} linhas duplicadas na camada Gold!"
+    assert total_duplicatas == 0, f"Alerta Crítico: Foram encontradas {total_duplicatas} linhas duplicadas na camada Gold para a mesma chave temporal!"
