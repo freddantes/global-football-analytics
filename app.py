@@ -59,7 +59,7 @@ configure_gcp_credentials()
 # ==========================================
 @st.cache_data
 def load_standings_via_duckdb(league_code: str):
-    bucket_path = "data/gold/standings"
+    bucket_path = "futebol-datalake-global-analytics-2026/data/gold/standings"
         
     try:
         fs = gcsfs.GCSFileSystem()
@@ -202,7 +202,7 @@ if pagina_selecionada == "📊 Classificação":
         st.subheader(f"Tendência de Posição")
         try:
             fs_trend = gcsfs.GCSFileSystem()
-            dataset_trend = ds.dataset("data/gold/standings", format="parquet", filesystem=fs_trend, partitioning="hive")
+            dataset_trend = ds.dataset("futebol-datalake-global-analytics-2026/data/gold/standings", format="parquet", filesystem=fs_trend, partitioning="hive")
             
             team_history_query = f"""
                 SELECT playedGames as rodada, position as posicao 
