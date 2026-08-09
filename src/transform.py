@@ -21,6 +21,7 @@ def process_standings(raw_data: dict) -> pd.DataFrame:
             item = {
                 "position": row.get("position"),
                 "team": row.get("team", {}).get("name"),
+                "crest": row.get("team", {}).get("crest"), # <- NOVA COLUNA DE IMAGEM AQUI
                 "points": row.get("points"),
                 "playedGames": row.get("playedGames"),
                 "won": row.get("won"),
@@ -60,7 +61,7 @@ def process_standings(raw_data: dict) -> pd.DataFrame:
 
 
 # =====================================================================
-# 2. PROCESSAMENTO DE PARTIDAS (Matches) - NOVO!
+# 2. PROCESSAMENTO DE PARTIDAS (Matches)
 # =====================================================================
 def process_matches(raw_data: dict) -> pd.DataFrame:
     """

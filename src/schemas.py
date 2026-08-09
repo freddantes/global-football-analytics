@@ -7,6 +7,7 @@ from pydantic import BaseModel, Field, field_validator
 class StandingRowSchema(BaseModel):
     position: int = Field(..., ge=1, description="A posição na tabela deve ser maior ou igual a 1")
     team: str = Field(..., min_length=1, description="O nome do time não pode ser vazio")
+    crest: Optional[str] = Field(None, description="URL da imagem do escudo do time (pode ser nulo caso a API não forneça)") # <- NOVA COLUNA ADICIONADA AQUI
     points: int = Field(..., ge=0, description="Os pontos não podem ser negativos")
     playedGames: int = Field(..., ge=0)
     won: int = Field(..., ge=0)
