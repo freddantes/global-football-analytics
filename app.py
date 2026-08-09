@@ -36,16 +36,10 @@ LEAGUES = {
 # ==========================================
 @st.cache_resource
 def configure_gcp_credentials():
-    """
-    Configuração resiliente: Tenta usar o arquivo local primeiro. 
-    Se não encontrar, tenta buscar no cofre de segredos da nuvem (Streamlit Cloud).
-    """
-    # Cenário 1: Ambiente Local (O crachá físico já existe na pasta)
     if os.path.exists("google_credentials.json"):
         os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "google_credentials.json"
         return True
         
-    # Cenário 2: Ambiente de Produção (Streamlit Cloud)
     try:
         if "gcp_service_account" in st.secrets:
             gcp_cred_dict = dict(st.secrets["gcp_service_account"])
@@ -54,12 +48,10 @@ def configure_gcp_credentials():
             os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "google_credentials.json"
             return True
     except Exception:
-        # Se o cofre st.secrets não existir, o código ignora o erro silenciosamente
         pass
         
     return False
 
-# Executa a configuração de credenciais logo ao abrir o app
 configure_gcp_credentials()
 
 # ==========================================
@@ -67,10 +59,6 @@ configure_gcp_credentials()
 # ==========================================
 @st.cache_data
 def load_standings_via_duckdb(league_code: str):
-    """
-    Usa o PyArrow para ler as partições do Google Cloud com segurança e o DuckDB 
-    para consultar os dados na memória, evitando bloqueios de rede do Streamlit.
-    """
     bucket_path = "futebol-datalake-global-analytics-2026/data/gold/standings"
         
     try:
@@ -93,37 +81,41 @@ def load_standings_via_duckdb(league_code: str):
         return None
 
 # ==========================================
-# MENU DE NAVEGAÇÃO LATERAL (Sidebar)
+# UI: NAVEGAÇÃO PRINCIPAL (ESTILO MODERNO)
 # ==========================================
-st.sidebar.markdown("### 🧭 Menu Principal")
+st.markdown("### 🧭 Menu Principal")
 
-# Botões de navegação lateral
-pagina_selecionada = st.sidebar.radio(
-    "Escolha o módulo:",
-    ["📊 Classificação Geral", "🎯 Simulador Quantitativo", "📖 Metodologia Técnica"]
-)
+opcoes_menu = ["📊 Classificação", "🎯 Simulador Quantitativo", "📖 Metodologia Técnica"]
 
-st.sidebar.markdown("---")
-st.sidebar.markdown("### ⚙️ Filtros Globais")
-# Carrega todos os dados históricos da liga selecionada
-selected_league_name = st.sidebar.selectbox("Selecione a Competição:", list(LEAGUES.keys()))
-league_code = LEAGUES[selected_league_name]
+if hasattr(st, 'pills'):
+    pagina_selecionada = st.pills("Navegação:", opcoes_menu, default="📊 Classificação", label_visibility="collapsed")
+    if not pagina_selecionada: 
+        pagina_selecionada = "📊 Classificação"
+else:
+    pagina_selecionada = st.radio("Navegação:", opcoes_menu, horizontal=True, label_visibility="collapsed")
 
-
-# Lendo os dados no background com o spinner
-with st.spinner("Lendo dados do Data Lake no Google Cloud..."):
-    df_league_history = load_standings_via_duckdb(league_code)
+st.markdown("---")
 
 # ==========================================
-# RENDERIZAÇÃO DA TELA PRINCIPAL
+# UI: FILTRO MACRO (COMPETIÇÃO)
 # ==========================================
+if pagina_selecionada in ["📊 Classificação", "🎯 Simulador Quantitativo"]:
+    st.markdown("### ⚙️ Seleção de Campeonato")
+    selected_league_name = st.selectbox("Escolha a Competição:", list(LEAGUES.keys()), label_visibility="collapsed")
+    league_code = LEAGUES[selected_league_name]
 
-if pagina_selecionada == "📊 Classificação Geral":
-    st.title(f"⚽ Classificação Geral - {selected_league_name}")
+    with st.spinner("Lendo dados do Data Lake no Google Cloud..."):
+        df_league_history = load_standings_via_duckdb(league_code)
+    
     st.markdown("---")
+
+# ==========================================
+# RENDERIZAÇÃO DAS PÁGINAS
+# ==========================================
+
+if pagina_selecionada == "📊 Classificação":
     
     if df_league_history is not None and not df_league_history.empty:
-        # Identifica as datas disponíveis ordenadas cronologicamente
         if 'date' in df_league_history.columns:
             dates = sorted(df_league_history['date'].unique(), reverse=True)
         else:
@@ -147,40 +139,71 @@ if pagina_selecionada == "📊 Classificação Geral":
         else:
             df['delta'] = 0
 
-        team_list = sorted(df['team_name'].unique())
+        # ---------------------------------------------------------
+        # PARTE 1: VISÃO GERAL DO CAMPEONATO
+        # ---------------------------------------------------------
+        st.title(f"🏆 Visão Geral: {selected_league_name}")
         
-        # Movemos o filtro de time para a tela principal (já que ele só importa nesta aba)
-        selected_team = st.selectbox("Selecione o Time para Destaque (Desempenho Individual):", team_list)
+        st.subheader("Comparativo de Pontuação")
+        fig = px.bar(
+            df.sort_values('points', ascending=False), 
+            x='team_name', y='points', 
+            color='points', color_continuous_scale='Blues'
+        )
+        st.plotly_chart(fig, width="stretch")
+
+        st.subheader("Tabela de Classificação Completa")
+        df_display = df[['position', 'delta', 'team_name', 'playedGames', 'won', 'draw', 'lost', 'points', 'goalDifference', 'goals_per_game']].copy()
+        df_display['goals_per_game'] = df_display['goals_per_game'].round(2)
+        st.dataframe(df_display, width="stretch", hide_index=True)
+        
+        st.markdown("---")
+
+        # ---------------------------------------------------------
+        # PARTE 2: VISÃO ESPECÍFICA DO TIME
+        # ---------------------------------------------------------
+        st.title("🔍 Análise Individual da Equipe")
+        team_list = sorted(df['team_name'].unique())
+        selected_team = st.selectbox("Selecione a Equipe para detalhar:", team_list)
+        
         filtered_df = df[df['team_name'] == selected_team]
         
-        with st.container():
-            col_img, col_info = st.columns([1, 4])
+        with st.container(border=True):
+            col_img, col_info = st.columns([1, 5])
+            
             with col_img:
-                if 'team_crest' in filtered_df.columns:
-                    crest = filtered_df['team_crest'].values[0]
-                    if pd.notna(crest):
-                        st.image(crest, width=150)
+                # O DETETIVE DE ESCUDOS: Procura pelas colunas mais comuns vindas da API
+                coluna_imagem = None
+                for col_name in ['crest', 'team_crest', 'logo', 'team_logo']:
+                    if col_name in filtered_df.columns:
+                        coluna_imagem = col_name
+                        break
+                
+                if coluna_imagem:
+                    crest_url = filtered_df[coluna_imagem].values[0]
+                    if pd.notna(crest_url) and str(crest_url).strip() != "":
+                        st.image(crest_url, width=100)
+                    else:
+                        st.markdown("🛡️ *Escudo não disponível*")
+                else:
+                    st.markdown("🛡️ *Escudo não disponível*")
+            
             with col_info:
                 st.subheader(selected_team)
                 c1, c2, c3, c4 = st.columns(4)
                 c1.metric("Posição", int(filtered_df['position'].values[0]), delta=int(filtered_df['delta'].values[0]))
                 c2.metric("Pontos", int(filtered_df['points'].values[0]))
                 
-                # Formatando a métrica para exibir apenas 2 casas decimais
                 gols_por_jogo = float(filtered_df['goals_per_game'].values[0])
                 c3.metric("Gols/Jogo", f"{gols_por_jogo:.2f}")
                 
                 c4.metric("Aproveitamento", f"{int(filtered_df['points_pct'].values[0]*100)}%")
 
-        st.markdown("---")
-        st.subheader(f"Tendência de Posição: {selected_team}")
-        
+        st.subheader(f"Tendência de Posição")
         try:
-            # Reutiliza a lógica PyArrow para buscar o histórico e desenhar o gráfico
             fs_trend = gcsfs.GCSFileSystem()
             dataset_trend = ds.dataset("futebol-datalake-global-analytics-2026/data/gold/standings", format="parquet", filesystem=fs_trend, partitioning="hive")
             
-            # Buscando por rodada ao invés de data
             team_history_query = f"""
                 SELECT playedGames as rodada, position as posicao 
                 FROM dataset_trend 
@@ -199,31 +222,13 @@ if pagina_selecionada == "📊 Classificação Geral":
                 st.info("Histórico insuficiente para gerar gráfico de tendência por rodadas.")
         except Exception:
             pass
-
-        st.markdown("---")
-        st.subheader("Comparativo de Pontuação Geral")
-        fig = px.bar(
-            df.sort_values('points', ascending=False), 
-            x='team_name', y='points', 
-            color='points', color_continuous_scale='Blues'
-        )
-        st.plotly_chart(fig, width="stretch")
-
-        st.subheader("Tabela de Classificação Completa")
-        
-        # Preparando a tabela de exibição e limitando as casas decimais da coluna inteira
-        df_display = df[['position', 'delta', 'team_name', 'playedGames', 'won', 'draw', 'lost', 'points', 'goalDifference', 'goals_per_game']].copy()
-        df_display['goals_per_game'] = df_display['goals_per_game'].round(2)
-        
-        st.dataframe(df_display, width="stretch", hide_index=True)
         
     else:
-        st.warning("Nenhuma partição de classificação encontrada. Execute o pipeline ETL.")
+        st.warning("Nenhuma partição de classificação encontrada. Verifique o Data Lake.")
 
 elif pagina_selecionada == "🎯 Simulador Quantitativo":
     st.title("🎯 Simulador Quantitativo (Distribuição de Poisson)")
     st.markdown("Calcula probabilidades baseadas na Força de Ataque e Defesa histórica de cada equipe no campeonato, processadas em tempo real via DuckDB e balanceadas pelo decaimento temporal (*Time Decay*).")
-    st.markdown("---")
     
     if df_league_history is not None and not df_league_history.empty:
         team_list_model = sorted(df_league_history['team_name'].unique())
@@ -238,8 +243,8 @@ elif pagina_selecionada == "🎯 Simulador Quantitativo":
         if home_team_model == away_team_model:
             st.error("Por favor, selecione equipes diferentes para o confronto.")
         else:
-            if st.button("Executar Modelo Preditivo", type="primary"):
-                with st.spinner("Lendo histórico no Data Lake e processando estatísticas matemáticas..."):
+            if st.button("Executar Modelo Preditivo", type="primary", use_container_width=True):
+                with st.spinner("Processando estatísticas matemáticas..."):
                     preds = get_match_predictions(league_code, home_team_model, away_team_model)
                     
                     if preds:
@@ -261,12 +266,10 @@ elif pagina_selecionada == "🎯 Simulador Quantitativo":
 
 elif pagina_selecionada == "📖 Metodologia Técnica":
     st.title("📖 Documentação e Arquitetura")
-    st.markdown("---")
     try:
         with open("TECHNICAL_REPORT.md", "r", encoding="utf-8") as file:
             conteudo_markdown = file.read()
             
-        # Utilizamos o st.write, que possui integração 100% nativa com o motor Mermaid
         st.write(conteudo_markdown)
         
     except FileNotFoundError:
