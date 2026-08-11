@@ -1,6 +1,6 @@
 # Global Football Analytics Pipeline ⚽
 
-[![Python Tests](https://github.com/freddantes/global-football-analytics/actions/workflows/tests.yml/badge.svg)](https://github.com/freddantes/global-football-analytics/actions/workflows/tests.yml)
+[![Python Tests](https://github.com/freddantes/global-football-analytics/actions/workflows/daily_pipeline.yml/badge.svg)](https://github.com/freddantes/global-football-analytics/actions/workflows/daily_pipeline.yml)
 
 ## 🎯 Objective
 This project bridges the gap between raw sports data and quantitative financial modeling. By automating the ingestion of global football statistics, it provides a highly reliable, mathematically sound foundation (Gold Layer) designed specifically to feed Poisson distribution models and identify Positive Expected Value (+EV) opportunities in the sports betting market.
