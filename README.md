@@ -2,7 +2,8 @@
 
 [![Python Tests](https://github.com/freddantes/global-football-analytics/actions/workflows/tests.yml/badge.svg)](https://github.com/freddantes/global-football-analytics/actions/workflows/tests.yml)
 
-A professional-grade, automated data pipeline and dashboard designed to extract, transform, and analyze football data from multiple global competitions. Built with a focus on modularity, data quality, and scalability.
+## 🎯 Objective
+This project bridges the gap between raw sports data and quantitative financial modeling. By automating the ingestion of global football statistics, it provides a highly reliable, mathematically sound foundation (Gold Layer) designed specifically to feed Poisson distribution models and identify Positive Expected Value (+EV) opportunities in the sports betting market.
 
 ## 🏗️ Architecture & Engineering
 This project follows a professional **ETL (Extract, Transform, Load)** pattern. Below is the visual data flow of the architecture:
@@ -29,6 +30,12 @@ graph LR
 *   **Quantitative Backtesting Engine:** Built-in financial simulator to validate model profitability against historical closing odds (Pinnacle) using Expected Value (+EV) calculations.
 *   **Advanced Analytics:** Volatility analysis (delta position) and historical trend visualization.
 *   **Interactive Dashboard:** Built with `streamlit`.
+
+## 🛡️ Data Quality Assurance
+To ensure the integrity of the data feeding the quantitative models, this pipeline implements strict validation checks:
+*   **API Resilience:** Mocked unit testing for data extraction and exponential backoff for rate limits.
+*   **Transformation Integrity:** Automated tests for mathematical calculations (e.g., goals per game, win rates) and graceful handling of future/unplayed matches.
+*   **Data Lake Validation:** DuckDB-powered runtime assertions to guarantee zero temporal duplicates within the Parquet Hive partitions.
 
 ## 🛠️ Tech Stack
 - **Language:** Python 3.12+
