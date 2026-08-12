@@ -1,7 +1,6 @@
 # Relatório Técnico: Global Football Analytics & Quantitative Prop Bets
 
-Este documento serve como um mergulho profundo na engenharia, arquitetura e ciência de dados por trás desta plataforma. O objetivo é detalhar as decisões técnicas que transformaram a extração bruta de dados esportivos em um pipeline escalável na nuvem e em um motor preditivo robusto.
-
+Este documento serve como um mergulho profundo na engenharia, arquitetura e ciência de dados por trás desta plataforma. O objetivo é detalhar as decisões técnicas que transformaram a extração bruta de dados esportivos em um pipeline escalável na nuvem e em um motor preditivo quantitativo robusto, focado em métricas de produção e performance.
 ---
 
 ## 1. Arquitetura do Pipeline de Dados (Data Engineering)
@@ -26,21 +25,21 @@ graph TD
 ```
 
 ### 1.2 O Processo de Ingestão e Armazenamento
-O tratamento dos dados abandona bancos de dados relacionais tradicionais e arquivos CSV pesados na ponta final, adotando as seguintes tecnologias:
+O tratamento dos dados abandona bancos de dados relacionais tradicionais e arquivos CSV pesados na ponta final, adotando uma stack voltada para a alta performance analítica:
 
 *   **Extração (Python):** Scripts automatizados consomem endpoints RESTful, validando e limpando os dados.
-*   **Armazenamento em Formato Colunar (Parquet):** Diferente do CSV que lê linhas inteiras, o Parquet armazena os dados por colunas e os compacta. Isso significa que se o dashboard precisa apenas da coluna "gols", as outras colunas não são carregadas na memória.
+*   **Armazenamento em Formato Colunar (Parquet):** Diferente do CSV que lê linhas inteiras, o Parquet armazena os dados por colunas e os compacta. Isso permite a projeção exata de dados: se o dashboard consultar apenas a coluna de 'gols', o restante do arquivo não será carregado na memória, economizando I/O drasticamente.
 *   **Particionamento Hive:** Os dados são salvos no Google Cloud Storage em pastas hierárquicas (ex: `date=2026-08-05`). Isso permite o conceito de *Partition Pruning*, onde o motor de busca ignora completamente os diretórios que não correspondem ao filtro do usuário, garantindo respostas na casa dos milissegundos.
 
 ---
 
 ## 2. A Camada Analítica e Computação em Nuvem
 
-Para manter a aplicação rápida e gratuita, implementamos uma separação estrita entre armazenamento e computação.
+Para manter a aplicação resiliente e com custo zero de infraestrutura ociosa, implementamos uma separação estrita entre armazenamento e computação.
 
 ### 2.1 DuckDB: O Motor Analítico
 Em vez de pagar por um servidor de banco de dados rodando 24 horas por dia (como um PostgreSQL no Google Cloud), a aplicação utiliza o **DuckDB**. 
-Ele é um motor de processamento OLAP (Online Analytical Processing) embutido no Python. O DuckDB vai até o Google Cloud, "puxa" apenas os dados particionados necessários para a memória RAM do servidor gratuito do Streamlit e executa consultas analíticas complexas via SQL de forma quase instantânea.
+Ele é um motor de processamento OLAP (Online Analytical Processing) embutido no Python. O DuckDB vai até o Google Cloud, "puxa" apenas os dados particionados necessários para a memória RAM do servidor da aplicação e executa agregações complexas via SQL instantaneamente.
 
 ### 2.2 PyArrow e Sistema de Arquivos (GCSFS)
 Para evitar que o banco de dados seja bloqueado por barreiras de rede (como erros `HTTP 403`), utilizamos a biblioteca `pyarrow.dataset` em conjunto com `gcsfs`. O Python autentica as credenciais do Google Cloud de forma invisível e serve os dados ao DuckDB na memória, garantindo alta segurança e bypass de restrições de rede.
@@ -49,7 +48,7 @@ Para evitar que o banco de dados seja bloqueado por barreiras de rede (como erro
 
 ## 3. Fundamentação Matemática: O Modelo de Poisson
 
-O núcleo desta plataforma é o seu motor quantitativo para o mercado de apostas esportivas (*Prop Bets* e *Moneyline*). Em vez de utilizar métricas superficiais ou intuição, aplicamos a **Distribuição de Poisson**.
+O núcleo desta plataforma é o seu motor quantitativo voltado ao mercado de apostas esportivas (*Prop Bets de performance de jogadores* e *Moneyline*). A lógica de precificação foi construída utilizando a **Distribuição de Poisson**.
 
 ### 3.1 Por que Poisson?
 Na estatística, a Distribuição de Poisson é usada para calcular a probabilidade de um número específico de eventos ocorrer em um intervalo fixo de tempo. 
@@ -102,7 +101,7 @@ Na análise quantitativa esportiva, não buscamos prever o futuro com certeza ab
 Imagine uma moeda perfeitamente equilibrada (50% cara, 50% coroa). Se alguém te oferecer pagar o triplo do valor apostado toda vez que der cara, você deve aceitar. Você ainda perderá metade das vezes, mas, a longo prazo, o prêmio desproporcional garante um lucro matemático inevitável. O nosso modelo procura essas "moedas desreguladas" no mercado de futebol.
 
 ### 4.2 Como o Simulador Funciona
-O script de validação viaja no tempo para o início de uma temporada histórica (ex: 2023) e executa o seguinte fluxo cego:
+O script de validação processa massas de dados de temporadas históricas fechadas (ex: 2025) executando o seguinte pipeline às cegas:
 
 1.  **Ocultação da Realidade:** O script isola o jogo e esconde o resultado real que aconteceu no passado.
 2.  **Cálculo Próprio:** O nosso algoritmo calcula a probabilidade justa do evento usando a modelagem de Poisson e o decaimento temporal (memória da equipe).
