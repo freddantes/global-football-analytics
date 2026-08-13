@@ -1,9 +1,11 @@
+# src/transform.py
+import duckdb
 import pandas as pd
 from src.schemas import StandingRowSchema, MatchRowSchema
 from src.logging_config import logger
 
 # =====================================================================
-# 1. PROCESSAMENTO DE TABELA DE CLASSIFICAÇÃO (Standings)
+# 1. PROCESSAMENTO DE TABELA DE CLASSIFICAÇÃO (Standings com DuckDB)
 # =====================================================================
 def process_standings(raw_data: dict) -> pd.DataFrame:
     try:
@@ -21,7 +23,7 @@ def process_standings(raw_data: dict) -> pd.DataFrame:
             item = {
                 "position": row.get("position"),
                 "team": row.get("team", {}).get("name"),
-                "crest": row.get("team", {}).get("crest"), # <- NOVA COLUNA DE IMAGEM AQUI
+                "crest": row.get("team", {}).get("crest"),
                 "points": row.get("points"),
                 "playedGames": row.get("playedGames"),
                 "won": row.get("won"),
@@ -31,28 +33,28 @@ def process_standings(raw_data: dict) -> pd.DataFrame:
                 "goalsAgainst": row.get("goalsAgainst"),
                 "goalDifference": row.get("goalDifference")
             }
-            
             validated_row = StandingRowSchema(**item)
             processed_data.append(validated_row.model_dump())
             
-        df = pd.DataFrame(processed_data)
-        
-        if 'team' in df.columns:
-            df = df.rename(columns={'team': 'team_name'})
-        
-        if 'playedGames' in df.columns and 'goalsFor' in df.columns:
-            df['goals_per_game'] = df.apply(
-                lambda x: x['goalsFor'] / x['playedGames'] if x['playedGames'] > 0 else 0.0, 
-                axis=1
-            )
-            
-        if 'playedGames' in df.columns and 'points' in df.columns:
-            df['points_pct'] = df.apply(
-                lambda x: x['points'] / (x['playedGames'] * 3) if x['playedGames'] > 0 else 0.0, 
-                axis=1
-            )
+        df_temp = pd.DataFrame(processed_data)
+        if 'team' in df_temp.columns:
+            df_temp = df_temp.rename(columns={'team': 'team_name'})
 
-        logger.info("Contrato de dados de classificação validado com sucesso.")
+        # Processamento analítico via SQL com DuckDB em memória
+        con = duckdb.connect(database=':memory:')
+        
+        query = """
+        SELECT 
+            *,
+            CASE WHEN playedGames > 0 THEN CAST(goalsFor AS DOUBLE) / playedGames ELSE 0.0 END AS goals_per_game,
+            CASE WHEN playedGames > 0 THEN CAST(points AS DOUBLE) / (playedGames * 3) ELSE 0.0 END AS points_pct
+        FROM df_temp
+        """
+        
+        df = con.execute(query).fetchdf()
+        con.close()
+
+        logger.info("Contrato de dados de classificação validado e transformado via DuckDB com sucesso.")
         return df
 
     except Exception as e:
@@ -61,12 +63,12 @@ def process_standings(raw_data: dict) -> pd.DataFrame:
 
 
 # =====================================================================
-# 2. PROCESSAMENTO DE PARTIDAS (Matches)
+# 2. PROCESSAMENTO DE PARTIDAS (Matches com DuckDB)
 # =====================================================================
 def process_matches(raw_data: dict) -> pd.DataFrame:
     """
     Transforma o JSON bruto de partidas em um DataFrame analítico.
-    Achatamos os dados aninhados e criamos variáveis quantitativas (Feature Engineering).
+    Achatamos os dados aninhados e criamos variáveis quantitativas usando DuckDB SQL.
     """
     try:
         matches = raw_data.get('matches', [])
@@ -78,8 +80,6 @@ def process_matches(raw_data: dict) -> pd.DataFrame:
         for row in matches:
             score = row.get("score", {})
             full_time = score.get("fullTime", {})
-            
-            # Extraímos os dicionários dos times com segurança
             home_dict = row.get("homeTeam", {})
             away_dict = row.get("awayTeam", {})
             
@@ -88,8 +88,6 @@ def process_matches(raw_data: dict) -> pd.DataFrame:
                 "utc_date": row.get("utcDate"),
                 "status": row.get("status"),
                 "matchday": row.get("matchday"),
-                # O operador 'or' garante que se get("name") retornar None ou string vazia,
-                # o Python assumirá automaticamente o texto "A Definir"
                 "home_team": home_dict.get("name") or "A Definir",
                 "away_team": away_dict.get("name") or "A Definir",
                 "home_goals": full_time.get("home"),
@@ -97,29 +95,37 @@ def process_matches(raw_data: dict) -> pd.DataFrame:
                 "winner": score.get("winner")
             }
             
-            # Validação linha a linha pelo Pydantic (permite None para jogos futuros)
             validated_row = MatchRowSchema(**item)
             processed_data.append(validated_row.model_dump())
 
-        df = pd.DataFrame(processed_data)
+        df_temp = pd.DataFrame(processed_data)
 
-        # -----------------------------------------------------------------
-        # ENGENHARIA DE ATRIBUTOS (Feature Engineering para Ciência de Dados)
-        # -----------------------------------------------------------------
-        # 1. Converte a data texto de ISO 8601 para tipo Datetime real do Pandas
-        df['utc_date'] = pd.to_datetime(df['utc_date'], errors='coerce')
+        # Processamento de Feature Engineering via SQL com DuckDB em memória
+        con = duckdb.connect(database=':memory:')
 
-        # 2. Total de gols no jogo (se o jogo for futuro, resultará em NaN automaticamente)
-        df['total_goals'] = df['home_goals'] + df['away_goals']
-        df['goal_difference'] = df['home_goals'] - df['away_goals']
+        query = """
+        SELECT 
+            match_id,
+            CAST(utc_date AS TIMESTAMP) AS utc_date,
+            status,
+            matchday,
+            home_team,
+            away_team,
+            home_goals,
+            away_goals,
+            winner,
+            (home_goals + away_goals) AS total_goals,
+            (home_goals - away_goals) AS goal_difference,
+            CASE WHEN winner = 'HOME_TEAM' THEN 1 ELSE 0 END AS home_win,
+            CASE WHEN winner = 'AWAY_TEAM' THEN 1 ELSE 0 END AS away_win,
+            CASE WHEN winner = 'DRAW' THEN 1 ELSE 0 END AS draw
+        FROM df_temp
+        """
 
-        # 3. Variáveis Dummy (0 ou 1) para modelagem quantitativa de apostas / prop bets
-        # Exemplo: Se winner == 'HOME_TEAM', home_win vira 1, senão vira 0.
-        df['home_win'] = (df['winner'] == 'HOME_TEAM').astype(int)
-        df['away_win'] = (df['winner'] == 'AWAY_TEAM').astype(int)
-        df['draw'] = (df['winner'] == 'DRAW').astype(int)
+        df = con.execute(query).fetchdf()
+        con.close()
 
-        logger.info(f"Contrato de partidas validado. {len(df)} jogos processados com sucesso.")
+        logger.info(f"Contrato de partidas validado via DuckDB. {len(df)} jogos processados com sucesso.")
         return df
 
     except Exception as e:
