@@ -1,6 +1,9 @@
 # Relatório Técnico: Global Football Analytics & Quantitative Prop Bets
 
+---
+
 Este documento serve como um mergulho profundo na engenharia, arquitetura e ciência de dados por trás desta plataforma. O objetivo é detalhar as decisões técnicas que transformaram a extração bruta de dados esportivos em um pipeline escalável na nuvem e em um motor preditivo quantitativo robusto, focado em métricas de produção e performance.
+
 ---
 
 ## 1. Arquitetura do Pipeline de Dados (Data Engineering)
