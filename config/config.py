@@ -20,7 +20,6 @@ LEAGUES = {
     "Champions League": "CL",
     "Libertadores": "CLI", 
     "Brasileirão Série A": "BSA",
-    "Brasileirão Série B": "BSB",  # <-- Série B adicionada aqui
     "La Liga": "PD", 
     "Ligue 1": "FL1", 
     "Serie A Italiana": "SA", 
