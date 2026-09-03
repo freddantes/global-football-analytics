@@ -26,8 +26,12 @@ def query_hive_standings(league_code: str = None) -> pd.DataFrame:
         return None
 
 def query_hive_matches(league_code: str = None) -> pd.DataFrame:
+    # Aponta para todos os arquivos .parquet dentro da pasta matches de forma recursiva
     parquet_path = os.path.join("data", "gold", "matches", "**", "*.parquet")
-    query = f"SELECT * FROM read_parquet('{parquet_path}', hive_partitioning=1, union_by_name=True)"
+    
+    # Usamos union_by_name=True para unificar schemas diferentes se houver, 
+    # e removemos a exigência estrita de hive_partitioning se os dados já contêm a coluna 'league_code'
+    query = f"SELECT * FROM read_parquet('gs://futebol-datalake-global-analytics-2026/data/gold/matches/**/*.parquet', union_by_name=True)"
     
     if league_code:
         query += f" WHERE league_code = '{league_code.upper()}'"
