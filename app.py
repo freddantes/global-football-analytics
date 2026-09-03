@@ -5,15 +5,10 @@ import plotly.express as px
 import pyarrow.dataset as ds
 import gcsfs
 
-# Importando o novo motor estatístico de Poisson
 from src.analytics import get_match_predictions
 
-# ==========================================
-# CONFIGURAÇÃO DA PÁGINA E CSS (Design Profissional)
-# ==========================================
 st.set_page_config(page_title="Dashboard Global de Futebol", layout="wide")
 
-# Oculta o menu superior direito (hamburguer) e o rodapé "Made with Streamlit"
 hide_st_style = """
             <style>
             #MainMenu {visibility: hidden;}
@@ -29,9 +24,6 @@ LEAGUES = {
     "La Liga": "PD", "Ligue 1": "FL1", "Serie A Italiana": "SA", "Bundesliga": "BL1"
 }
 
-# ==========================================
-# AUTENTICAÇÃO NO GOOGLE CLOUD (IN-MEMORY)
-# ==========================================
 @st.cache_resource
 def get_gcs_filesystem():
     try:
@@ -40,41 +32,34 @@ def get_gcs_filesystem():
             return gcsfs.GCSFileSystem(token=gcp_cred)
     except Exception as e:
         st.warning(f"Erro ao carregar secrets, usando credenciais padrão. Detalhe: {e}")
-    
     return gcsfs.GCSFileSystem()
 
 # ==========================================
-# EXTRAÇÃO DE DADOS (DATA LAKE NO GCP)
+# CACHE OTIMIZADO COM TTL (Expira em 1 hora para liberar RAM)
 # ==========================================
-@st.cache_data
+@st.cache_data(ttl=3600, show_spinner="Lendo dados otimizados do Data Lake...")
 def load_standings_via_duckdb(league_code: str):
     bucket_path = "futebol-datalake-global-analytics-2026/data/gold/standings"
         
     try:
         fs = get_gcs_filesystem()
-        
-        # 1. Encontra todos os arquivos parquet do bucket
         arquivos = fs.glob(f"{bucket_path}/**/*.parquet")
         if not arquivos:
             return None
             
-        # 2. Ordena de forma reversa (garante que o arquivo mais recente seja o [0])
         arquivos.sort(reverse=True)
         
-        # 3. Lê apenas os metadados (cabeçalho) do arquivo mais novo para capturar a coluna 'crest'
         import pyarrow.parquet as pq
         import pyarrow as pa
         
         with fs.open(arquivos[0]) as f:
             esquema_atualizado = pq.read_schema(f)
         
-        # 4. Adiciona as partições do Hive ao esquema para o PyArrow não quebrar
         if 'date' not in esquema_atualizado.names:
             esquema_atualizado = esquema_atualizado.append(pa.field('date', pa.string()))
         if 'league_code' not in esquema_atualizado.names:
             esquema_atualizado = esquema_atualizado.append(pa.field('league_code', pa.string()))
         
-        # 5. Carrega o dataset IMPONDO o esquema atualizado
         dataset = ds.dataset(
             bucket_path, 
             format="parquet", 
@@ -83,6 +68,7 @@ def load_standings_via_duckdb(league_code: str):
             schema=esquema_atualizado
         )
         
+        # Filtro direto na query para puxar apenas a liga selecionada, economizando memória
         query = f"SELECT * FROM dataset WHERE league_code = '{league_code}'"
         df = duckdb.query(query).to_df()
         
