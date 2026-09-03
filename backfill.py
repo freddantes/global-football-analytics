@@ -1,12 +1,13 @@
 import pandas as pd
-import os
+from dotenv import load_dotenv
 
 # ==========================================
 # 1. CONFIGURAÇÃO DE ACESSO À NUVEM
 # ==========================================
-# Autentica o seu computador local no Google Cloud usando o arquivo de credenciais
-os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "google_credentials.json"
- BUCKET_PATH = "gs://futebol-datalake-global-analytics-2026/data/gold/matches"
+# Carrega as variáveis de ambiente do arquivo .env
+load_dotenv()
+
+BUCKET_PATH = "gs://futebol-datalake-global-analytics-2026/data/gold/matches"
 # LOCAL_PATH = os.path.join("data", "gold", "matches") # apenas para teste local
 
 def run_backfill():
