@@ -232,7 +232,19 @@ elif pagina_selecionada == "🎯 Simulador Quantitativo":
     st.markdown("Calcula probabilidades baseadas na Força de Ataque e Defesa histórica de cada equipe, processadas via DuckDB e balanceadas pelo decaimento temporal (*Time Decay*).")
     
     if df_league_history is not None and not df_league_history.empty:
-        team_list_model = sorted(df_league_history['team_name'].unique())
+        # --- ISOLAMENTO DA TEMPORADA ATUAL APENAS PARA A SELEÇÃO ---
+        if 'date' in df_league_history.columns:
+            dates = sorted(df_league_history['date'].unique(), reverse=True)
+        else:
+            df_league_history['date'] = df_league_history['__file_path__'].apply(
+                lambda x: x.split('date=')[1].split('/')[0] if 'date=' in x else 'latest'
+            )
+            dates = sorted(df_league_history['date'].unique(), reverse=True)
+
+        latest_date = dates[0]
+        df_current_season = df_league_history[df_league_history['date'] == latest_date]
+        team_list_model = sorted(df_current_season['team_name'].unique())
+        # -----------------------------------------------------------
         
         col_home, col_away = st.columns(2)
         with col_home:
