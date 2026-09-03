@@ -1,6 +1,7 @@
 # Bibliotecas Principais de Dados
 pandas
 pyarrow
+scipy
 
 # Interação com APIs
 requests
