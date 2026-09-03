@@ -1,8 +1,6 @@
 import streamlit as st
 import pandas as pd
 import duckdb
-import os
-import json
 import plotly.express as px
 import pyarrow.dataset as ds
 import gcsfs
@@ -32,27 +30,18 @@ LEAGUES = {
 }
 
 # ==========================================
-# AUTENTICAÇÃO NO GOOGLE CLOUD (SECRETS)
+# AUTENTICAÇÃO NO GOOGLE CLOUD (IN-MEMORY)
 # ==========================================
 @st.cache_resource
-def configure_gcp_credentials():
-    if os.path.exists("google_credentials.json"):
-        os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "google_credentials.json"
-        return True
-        
+def get_gcs_filesystem():
     try:
         if "gcp_service_account" in st.secrets:
-            gcp_cred_dict = dict(st.secrets["gcp_service_account"])
-            with open("google_credentials.json", "w") as f:
-                json.dump(gcp_cred_dict, f)
-            os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "google_credentials.json"
-            return True
-    except Exception:
-        pass
-        
-    return False
-
-configure_gcp_credentials()
+            gcp_cred = dict(st.secrets["gcp_service_account"])
+            return gcsfs.GCSFileSystem(token=gcp_cred)
+    except Exception as e:
+        st.warning(f"Erro ao carregar secrets, usando credenciais padrão. Detalhe: {e}")
+    
+    return gcsfs.GCSFileSystem()
 
 # ==========================================
 # EXTRAÇÃO DE DADOS (DATA LAKE NO GCP)
@@ -62,7 +51,7 @@ def load_standings_via_duckdb(league_code: str):
     bucket_path = "futebol-datalake-global-analytics-2026/data/gold/standings"
         
     try:
-        fs = gcsfs.GCSFileSystem()
+        fs = get_gcs_filesystem()
         
         # 1. Encontra todos os arquivos parquet do bucket
         arquivos = fs.glob(f"{bucket_path}/**/*.parquet")
@@ -227,7 +216,7 @@ if pagina_selecionada == "📊 Classificação":
 
         st.subheader(f"Tendência de Posição")
         try:
-            fs_trend = gcsfs.GCSFileSystem()
+            fs_trend = get_gcs_filesystem()
             dataset_trend = ds.dataset("futebol-datalake-global-analytics-2026/data/gold/standings", format="parquet", filesystem=fs_trend, partitioning="hive")
             
             team_history_query = f"""
