@@ -3,11 +3,25 @@ import math
 import numpy as np
 import duckdb
 import pandas as pd
+import gcsfs
+import pyarrow.dataset as ds
 from scipy.stats import poisson
 from src.logging_config import logger
 
+def get_gcs_token():
+    """Identifica automaticamente se está na nuvem (Streamlit Secrets) ou local (JSON)"""
+    try:
+        import streamlit as st
+        # Tenta pegar do ambiente seguro do Streamlit Cloud
+        if "gcp_service_account" in st.secrets:
+            return dict(st.secrets["gcp_service_account"])
+    except Exception:
+        pass
+    # Fallback para o ambiente local
+    return os.getenv("GOOGLE_APPLICATION_CREDENTIALS", "google_credentials.json")
+
 # =====================================================================
-# 1. CONSULTAS SQL VIA DUCKDB OTIMIZADAS
+# 1. CONSULTAS OTIMIZADAS (DATA LAKE)
 # =====================================================================
 
 def query_hive_standings(league_code: str = None) -> pd.DataFrame:
@@ -19,7 +33,6 @@ def query_hive_standings(league_code: str = None) -> pd.DataFrame:
     query += " ORDER BY points DESC, goalDifference DESC"
     
     try:
-        logger.info(f"Executando SQL DuckDB para standings (Liga: {league_code or 'Todas'})")
         return duckdb.query(query).to_df()
     except Exception as e:
         logger.error(f"Erro DuckDB (Standings): {e}")
@@ -27,67 +40,33 @@ def query_hive_standings(league_code: str = None) -> pd.DataFrame:
 
 def query_hive_matches(league_code: str = None) -> pd.DataFrame:
     """
-    Usa o DuckDB de forma otimizada e direcionada por liga para evitar varreduras lentas,
-    garantindo que o painel carregue instantaneamente sem travar no GCS.
+    Leitura ultrarrápida usando PyArrow Dataset e autenticação à prova de falhas.
     """
     try:
-        # Se uma liga específica foi solicitada, lemos diretamente a partição dela no GCS se houver suporte,
-        # ou lemos o diretório gold/matches de forma segura ignorando o erro de arquivos órfãos.
+        token = get_gcs_token()
+        fs = gcsfs.GCSFileSystem(token=token)
+        bucket_path = "futebol-datalake-global-analytics-2026/data/gold/matches"
+        
+        # O motor do PyArrow lê a pasta inteira paralelamente (sem lentidão)
+        dataset = ds.dataset(bucket_path, format="parquet", filesystem=fs, partitioning="hive")
+        
         if league_code:
-            # Aponta diretamente para a pasta da liga no bucket para máxima performance
-            caminho_duck = f"gs://futebol-datalake-global-analytics-2026/data/gold/matches/league_code={league_code.upper()}/**/*.parquet"
+            # Filtra nativamente no motor antes de carregar pra memória RAM
+            table = dataset.to_table(filter=ds.field("league_code") == league_code.upper())
         else:
-            caminho_duck = "gs://futebol-datalake-global-analytics-2026/data/gold/matches/**/*.parquet"
-
-        query = f"SELECT * FROM read_parquet('{caminho_duck}', union_by_name=True)"
-        
-        # Se por acaso a coluna league_code não veio na partição, filtramos caso venha global
-        if league_code and not 'league_code=' in caminho_duck:
-            query += f" WHERE league_code = '{league_code.upper()}'"
+            table = dataset.to_table()
             
-        query += " ORDER BY utc_date DESC"
+        df = table.to_pandas()
         
-        logger.info(f"Executando consulta otimizada para matches (Liga: {league_code or 'Todas'})")
-        df = duckdb.query(query).to_df()
-        
-        # Garantia de segurança para a coluna league_code caso o path não tenha injetado
-        if league_code and 'league_code' not in df.columns:
-            df['league_code'] = league_code.upper()
+        if not df.empty and 'utc_date' in df.columns:
+            df['utc_date'] = pd.to_datetime(df['utc_date'])
+            df = df.sort_values(by='utc_date', ascending=False)
             
         return df
         
     except Exception as e:
-        logger.warning(f"Tentativa de leitura direta falhou ({e}). Recorrendo ao fallback via gcsfs...")
-        
-        # Fallback seguro caso o DuckDB encontre algum arquivo corrompido isolado
-        import gcsfs
-        import pyarrow.parquet as pq
-        
-        creds_path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS", "google_credentials.json")
-        fs = gcsfs.GCSFileSystem(token=creds_path)
-        
-        bucket_path = "futebol-datalake-global-analytics-2026/data/gold/matches"
-        alvo = f"{bucket_path}/league_code={league_code.upper()}/**/*.parquet" if league_code else f"{bucket_path}/**/*.parquet"
-        
-        arquivos = [f for f in fs.glob(alvo) if "date=" not in f or "date=2012-05-19" not in f]
-        if not arquivos:
-            return None
-            
-        dfs = []
-        for arq in arquivos[:200]: # Limita amostragem se necessário para garantir velocidade
-            try:
-                with fs.open(arq, 'rb') as f:
-                    dfs.append(pq.read_table(f).to_pandas())
-            except:
-                continue
-                
-        if not dfs:
-            return None
-            
-        df_fallback = pd.concat(dfs, ignore_index=True)
-        if league_code and 'league_code' not in df_fallback.columns:
-            df_fallback['league_code'] = league_code.upper()
-        return df_fallback
+        logger.error(f"Erro fatal ao ler matches do GCS: {e}")
+        return None
 
 # =====================================================================
 # 2. MOTOR ESTATÍSTICO DE POISSON VETORIZADO
