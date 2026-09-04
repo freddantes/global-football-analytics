@@ -3,11 +3,13 @@ import math
 import numpy as np
 import duckdb
 import pandas as pd
+import gcsfs
+import pyarrow.parquet as pq
 from scipy.stats import poisson
 from src.logging_config import logger
 
 # =====================================================================
-# 1. CONSULTAS SQL VIA DUCKDB
+# 1. CONSULTAS SQL VIA DUCKDB / GCSFS
 # =====================================================================
 
 def query_hive_standings(league_code: str = None) -> pd.DataFrame:
@@ -26,22 +28,67 @@ def query_hive_standings(league_code: str = None) -> pd.DataFrame:
         return None
 
 def query_hive_matches(league_code: str = None) -> pd.DataFrame:
-    # Aponta para todos os arquivos .parquet dentro da pasta matches de forma recursiva
-    parquet_path = os.path.join("data", "gold", "matches", "**", "*.parquet")
-    
-    # Usamos union_by_name=True para unificar schemas diferentes se houver, 
-    # e removemos a exigência estrita de hive_partitioning se os dados já contêm a coluna 'league_code'
-    query = f"SELECT * FROM read_parquet('gs://futebol-datalake-global-analytics-2026/data/gold/matches/**/*.parquet', union_by_name=True)"
-    
-    if league_code:
-        query += f" WHERE league_code = '{league_code.upper()}'"
-    query += " ORDER BY utc_date DESC"
-    
+    """
+    Carrega o histórico de partidas de forma segura do GCS, filtrando a liga 
+    e ignorando diretórios de partição órfãos ou corrompidos, evitando falhas do DuckDB com gs://.
+    """
     try:
-        logger.info(f"Executando SQL DuckDB para matches (Liga: {league_code or 'Todas'})")
-        return duckdb.query(query).to_df()
+        creds_path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS", "google_credentials.json")
+        fs = gcsfs.GCSFileSystem(token=creds_path)
+        
+        bucket_path = "futebol-datalake-global-analytics-2026/data/gold/matches"
+        
+        # Se um código de liga foi especificado, tentamos buscar direto na subpasta para otimizar
+        if league_code:
+            caminho_busca = f"{bucket_path}/league_code={league_code.upper()}/**/*.parquet"
+        else:
+            caminho_busca = f"{bucket_path}/**/*.parquet"
+            
+        arquivos = fs.glob(caminho_busca)
+        
+        # Se não achar por subpasta exata, faz a busca global segura ignorando pastas de data órfãs
+        if not arquivos:
+            arquivos = [f for f in fs.glob(f"{bucket_path}/**/*.parquet") if "date=" in f]
+
+        if not arquivos:
+            logger.warning("Nenhum arquivo de partida encontrado no Data Lake.")
+            return None
+            
+        dfs = []
+        for arq in arquivos:
+            try:
+                with fs.open(arq, 'rb') as f:
+                    table = pq.read_table(f)
+                    df_temp = table.to_pandas()
+                    
+                    # Garante que a coluna league_code existe (recuperando do caminho se necessário)
+                    if 'league_code' not in df_temp.columns:
+                        if 'league_code=PL' in arq:
+                            df_temp['league_code'] = 'PL'
+                        elif 'league_code=BSA' in arq:
+                            df_temp['league_code'] = 'BSA'
+                            
+                    if league_code and 'league_code' in df_temp.columns:
+                        df_temp = df_temp[df_temp['league_code'] == league_code.upper()]
+                        
+                    if not df_temp.empty:
+                        dfs.append(df_temp)
+            except Exception:
+                continue
+                
+        if not dfs:
+            return None
+            
+        df_final = pd.concat(dfs, ignore_index=True)
+        if 'utc_date' in df_final.columns:
+            df_final['utc_date'] = pd.to_datetime(df_final['utc_date'])
+            df_final = df_final.sort_values(by='utc_date', ascending=False)
+            
+        logger.info(f"Dados carregados com sucesso para a liga: {league_code or 'Todas'}")
+        return df_final
+        
     except Exception as e:
-        logger.error(f"Erro DuckDB (Matches): {e}")
+        logger.error(f"Erro ao carregar matches via GCSFS: {e}")
         return None
 
 # =====================================================================
