@@ -12,12 +12,10 @@ def get_gcs_token():
     """Identifica automaticamente se está na nuvem (Streamlit Secrets) ou local (JSON)"""
     try:
         import streamlit as st
-        # Tenta pegar do ambiente seguro do Streamlit Cloud
         if "gcp_service_account" in st.secrets:
             return dict(st.secrets["gcp_service_account"])
     except Exception:
         pass
-    # Fallback para o ambiente local
     return os.getenv("GOOGLE_APPLICATION_CREDENTIALS", "google_credentials.json")
 
 # =====================================================================
@@ -40,26 +38,43 @@ def query_hive_standings(league_code: str = None) -> pd.DataFrame:
 
 def query_hive_matches(league_code: str = None) -> pd.DataFrame:
     """
-    Leitura ultrarrápida usando PyArrow Dataset e autenticação à prova de falhas.
+    Leitura isolada e ultrarrápida: pré-filtra os arquivos pela liga para evitar colisão 
+    de esquemas entre PL e BSA, mantendo a velocidade paralela do PyArrow Dataset.
     """
     try:
         token = get_gcs_token()
         fs = gcsfs.GCSFileSystem(token=token)
         bucket_path = "futebol-datalake-global-analytics-2026/data/gold/matches"
-        
-        # O motor do PyArrow lê a pasta inteira paralelamente (sem lentidão)
-        dataset = ds.dataset(bucket_path, format="parquet", filesystem=fs, partitioning="hive")
-        
+
+        # 1. Mapeia todos os arquivos reais no bucket
+        all_files = fs.glob(f"{bucket_path}/**/*.parquet")
+        if not all_files:
+            logger.warning("Nenhum arquivo encontrado no bucket.")
+            return None
+
+        # 2. Separa cirurgicamente apenas os arquivos da liga solicitada
+        target_files = []
         if league_code:
-            # Filtra nativamente no motor antes de carregar pra memória RAM
-            table = dataset.to_table(filter=ds.field("league_code") == league_code.upper())
+            codigo = league_code.upper()
+            target_files = [f for f in all_files if f"league_code={codigo}" in f.upper()]
         else:
-            table = dataset.to_table()
-            
-        df = table.to_pandas()
-        
+            target_files = all_files
+
+        if not target_files:
+            logger.warning(f"Histórico não encontrado para a liga: {league_code}")
+            return None
+
+        # 3. Leitura C++ nativa e exclusiva da liga (sem conflitos com o resto do Data Lake)
+        dataset = ds.dataset(target_files, format="parquet", filesystem=fs)
+        df = dataset.to_table().to_pandas()
+
+        # 4. Restaura a coluna de identificação caso tenha sido removida pelo particionamento de pastas
+        if league_code and 'league_code' not in df.columns:
+            df['league_code'] = league_code.upper()
+
+        # 5. Ordenação e formatação final
         if not df.empty and 'utc_date' in df.columns:
-            df['utc_date'] = pd.to_datetime(df['utc_date'])
+            df['utc_date'] = pd.to_datetime(df['utc_date'], errors='coerce')
             df = df.sort_values(by='utc_date', ascending=False)
             
         return df
