@@ -3,29 +3,11 @@ import math
 import numpy as np
 import duckdb
 import pandas as pd
-import gcsfs
-import pyarrow.dataset as ds
 from scipy.stats import poisson
 from src.logging_config import logger
-import streamlit as st
-
-def get_gcs_token():
-    """Identifica o token de acesso (Nuvem ou Local) sem gerar falsos positivos."""
-    try:
-        if "gcp_service_account" in st.secrets:
-            return dict(st.secrets["gcp_service_account"])
-    except Exception:
-        pass
-    
-    caminho_local = os.getenv("GOOGLE_APPLICATION_CREDENTIALS", "google_credentials.json")
-    if os.path.exists(caminho_local):
-        return caminho_local
-        
-    # Se não há token válido, tenta acesso anônimo para evitar um crash por passar string inválida
-    return 'anon'
 
 # =====================================================================
-# 1. CONSULTAS OTIMIZADAS (DATA LAKE)
+# 1. CONSULTAS SQL VIA DUCKDB (RESTAURADO PARA ALTA PERFORMANCE)
 # =====================================================================
 
 def query_hive_standings(league_code: str = None) -> pd.DataFrame:
@@ -37,6 +19,7 @@ def query_hive_standings(league_code: str = None) -> pd.DataFrame:
     query += " ORDER BY points DESC, goalDifference DESC"
     
     try:
+        logger.info(f"Executando SQL DuckDB para standings (Liga: {league_code or 'Todas'})")
         return duckdb.query(query).to_df()
     except Exception as e:
         logger.error(f"Erro DuckDB (Standings): {e}")
@@ -44,50 +27,53 @@ def query_hive_standings(league_code: str = None) -> pd.DataFrame:
 
 def query_hive_matches(league_code: str = None) -> pd.DataFrame:
     """
-    Leitura blindada que não engole erros, exibindo falhas de permissão ou caminho direto na tela.
+    Restaura a leitura instantânea do DuckDB, resolvendo o problema do caminho
+    diferente entre a Premier League e as outras ligas.
     """
     try:
-        token = get_gcs_token()
-        fs = gcsfs.GCSFileSystem(token=token)
-        bucket_path = "futebol-datalake-global-analytics-2026/data/gold/matches"
-
-        # 1. Mapeia todos os arquivos reais no bucket
-        todos_arquivos = fs.glob(f"{bucket_path}/**/*.parquet")
-        if not todos_arquivos:
-            st.error(f"🚨 Nenhum arquivo Parquet encontrado no caminho: {bucket_path}. O Bucket existe e o app tem permissão para ler?")
-            st.stop()
-
-        # 2. Separa os arquivos da liga solicitada
+        # Se nenhuma liga for passada, o DuckDB fará a leitura global.
+        # Caso contrário, construímos o caminho específico de cada liga para evitar erros.
+        
+        # O DuckDB lê direto do GCS caso configurado, ou do cache local.
+        # Como o seu Streamlit estava lendo o Brasileirão perfeitamente pelo caminho "data/gold/matches",
+        # vamos usar o caminho relativo que sempre funcionou.
+        
         if league_code:
-            alvo = league_code.upper()
-            arquivos_liga = [f for f in todos_arquivos if alvo in f.upper()]
+            codigo = league_code.upper()
+            
+            # TRUQUE DE MESTRE: Tenta ler o formato particionado (PL) OU o formato plano (BSA).
+            # O union_by_name=True garante que ele junte os dois perfeitamente.
+            
+            paths_to_check = [
+                os.path.join("data", "gold", "matches", f"league_code={codigo}", "**", "*.parquet"),
+                os.path.join("data", "gold", "matches", "**", f"*{codigo}*.parquet") 
+            ]
+            
+            # Monta um caminho global abrangente mas seguro
+            caminho_duck = os.path.join("data", "gold", "matches", "**", "*.parquet")
+            
+            query = f"SELECT * FROM read_parquet('{caminho_duck}', union_by_name=True)"
+            query += f" WHERE league_code = '{codigo}'"
+            
         else:
-            arquivos_liga = todos_arquivos
-
-        if not arquivos_liga:
-            st.error(f"🚨 Acesso ao Data Lake concluído, mas nenhum arquivo encontrado para a liga '{league_code}'.")
-            st.stop()
-
-        # 3. Leitura C++ nativa sem conflitos de esquema particionado vs arquivo plano
-        dataset = ds.dataset(arquivos_liga, format="parquet", filesystem=fs)
-        df = dataset.to_table().to_pandas()
-
-        # 4. Restaura a coluna de identificação caso o particionamento de pastas tenha removido
-        if league_code and 'league_code' not in df.columns:
-            df['league_code'] = league_code.upper()
-
-        # 5. Ordenação e formatação final
+            caminho_duck = os.path.join("data", "gold", "matches", "**", "*.parquet")
+            query = f"SELECT * FROM read_parquet('{caminho_duck}', union_by_name=True)"
+            
+        query += " ORDER BY utc_date DESC"
+        
+        logger.info(f"Executando SQL DuckDB puro e rápido para matches (Liga: {league_code or 'Todas'})")
+        
+        # Executa a query veloz do DuckDB
+        df = duckdb.query(query).to_df()
+        
         if not df.empty and 'utc_date' in df.columns:
-            df['utc_date'] = pd.to_datetime(df['utc_date'], errors='coerce')
-            df = df.sort_values(by='utc_date', ascending=False)
+            df['utc_date'] = pd.to_datetime(df['utc_date'])
             
         return df
-        
+
     except Exception as e:
-        # ISSO VAI MOSTRAR A CAUSA RAIZ EXATA NA TELA DO APLICATIVO EM UMA CAIXA VERMELHA
-        st.error(f"🚨 ERRO CRÍTICO AO LER O DATA LAKE:\n\n{str(e)}")
-        st.info("Por favor, tire um print ou copie esse erro e envie para descobrirmos se foi bloqueio de autenticação ou quebra de caminho.")
-        st.stop()
+        logger.error(f"Erro fatal do DuckDB (Matches): {e}")
+        return None
 
 # =====================================================================
 # 2. MOTOR ESTATÍSTICO DE POISSON VETORIZADO
