@@ -6,10 +6,6 @@ import pandas as pd
 from scipy.stats import poisson
 from src.logging_config import logger
 
-# =====================================================================
-# 1. CONSULTAS SQL VIA DUCKDB (RESTAURADO PARA ALTA PERFORMANCE)
-# =====================================================================
-
 def query_hive_standings(league_code: str = None) -> pd.DataFrame:
     parquet_path = os.path.join("data", "gold", "standings", "**", "*.parquet")
     query = f"SELECT * FROM read_parquet('{parquet_path}', hive_partitioning=1, union_by_name=True)"
@@ -19,65 +15,43 @@ def query_hive_standings(league_code: str = None) -> pd.DataFrame:
     query += " ORDER BY points DESC, goalDifference DESC"
     
     try:
-        logger.info(f"Executando SQL DuckDB para standings (Liga: {league_code or 'Todas'})")
         return duckdb.query(query).to_df()
     except Exception as e:
         logger.error(f"Erro DuckDB (Standings): {e}")
         return None
 
 def query_hive_matches(league_code: str = None) -> pd.DataFrame:
-    """
-    Restaura a leitura instantânea do DuckDB, resolvendo o problema do caminho
-    diferente entre a Premier League e as outras ligas.
-    """
     try:
-        # Se nenhuma liga for passada, o DuckDB fará a leitura global.
-        # Caso contrário, construímos o caminho específico de cada liga para evitar erros.
-        
-        # O DuckDB lê direto do GCS caso configurado, ou do cache local.
-        # Como o seu Streamlit estava lendo o Brasileirão perfeitamente pelo caminho "data/gold/matches",
-        # vamos usar o caminho relativo que sempre funcionou.
+        caminho_base = os.path.join("data", "gold", "matches")
         
         if league_code:
             codigo = league_code.upper()
+            caminho_particionado = os.path.join(caminho_base, f"league_code={codigo}", "**", "*.parquet")
             
-            # TRUQUE DE MESTRE: Tenta ler o formato particionado (PL) OU o formato plano (BSA).
-            # O union_by_name=True garante que ele junte os dois perfeitamente.
-            
-            paths_to_check = [
-                os.path.join("data", "gold", "matches", f"league_code={codigo}", "**", "*.parquet"),
-                os.path.join("data", "gold", "matches", "**", f"*{codigo}*.parquet") 
-            ]
-            
-            # Monta um caminho global abrangente mas seguro
-            caminho_duck = os.path.join("data", "gold", "matches", "**", "*.parquet")
-            
-            query = f"SELECT * FROM read_parquet('{caminho_duck}', union_by_name=True)"
-            query += f" WHERE league_code = '{codigo}'"
-            
+            try:
+                query = f"SELECT *, '{codigo}' as league_code FROM read_parquet('{caminho_particionado}', union_by_name=True)"
+                df = duckdb.query(query).to_df()
+            except Exception:
+                df = pd.DataFrame()
+                
+            if df.empty:
+                caminho_global = os.path.join(caminho_base, "**", "*.parquet")
+                query = f"SELECT * FROM read_parquet('{caminho_global}', union_by_name=True) WHERE league_code = '{codigo}'"
+                df = duckdb.query(query).to_df()
         else:
-            caminho_duck = os.path.join("data", "gold", "matches", "**", "*.parquet")
-            query = f"SELECT * FROM read_parquet('{caminho_duck}', union_by_name=True)"
-            
-        query += " ORDER BY utc_date DESC"
-        
-        logger.info(f"Executando SQL DuckDB puro e rápido para matches (Liga: {league_code or 'Todas'})")
-        
-        # Executa a query veloz do DuckDB
-        df = duckdb.query(query).to_df()
-        
+            caminho_global = os.path.join(caminho_base, "**", "*.parquet")
+            query = f"SELECT * FROM read_parquet('{caminho_global}', hive_partitioning=1, union_by_name=True)"
+            df = duckdb.query(query).to_df()
+
         if not df.empty and 'utc_date' in df.columns:
-            df['utc_date'] = pd.to_datetime(df['utc_date'])
+            df['utc_date'] = pd.to_datetime(df['utc_date'], errors='coerce')
+            df = df.sort_values(by='utc_date', ascending=False)
             
         return df
 
     except Exception as e:
         logger.error(f"Erro fatal do DuckDB (Matches): {e}")
         return None
-
-# =====================================================================
-# 2. MOTOR ESTATÍSTICO DE POISSON VETORIZADO
-# =====================================================================
 
 def get_match_predictions(league_code: str, home_team: str, away_team: str, match_date: str = None, historical_df: pd.DataFrame = None) -> dict:
     if historical_df is not None:
@@ -88,7 +62,7 @@ def get_match_predictions(league_code: str, home_team: str, away_team: str, matc
     if df is None or df.empty:
         return None
 
-    df_finished = df[df['status'].isin(['FINISHED', 'IN_PLAY'])].copy()
+    df_finished = df[df['status'].isin(['FINISHED', 'IN_PLAY'])].copy() if 'status' in df.columns else df.copy()
     df_finished = df_finished.dropna(subset=['home_goals', 'away_goals'])
     df_finished['utc_date'] = pd.to_datetime(df_finished['utc_date'])
     
@@ -99,7 +73,7 @@ def get_match_predictions(league_code: str, home_team: str, away_team: str, matc
     else:
         data_referencia = df_finished['utc_date'].max()
     
-    if df_finished.empty or len(df_finished) < 20:
+    if df_finished.empty or len(df_finished) < 10:
         return None
 
     df_finished['dias_atras'] = (data_referencia - df_finished['utc_date']).dt.days
@@ -114,12 +88,18 @@ def get_match_predictions(league_code: str, home_team: str, away_team: str, matc
     league_avg_home_goals = media_ponderada(df_finished, 'home_goals')
     league_avg_away_goals = media_ponderada(df_finished, 'away_goals')
 
-    home_stats = df_finished[df_finished['home_team'] == home_team]
+    home_clean = home_team.strip().lower()
+    away_clean = away_team.strip().lower()
+    
+    df_finished['home_clean'] = df_finished['home_team'].str.strip().str.lower()
+    df_finished['away_clean'] = df_finished['away_team'].str.strip().str.lower()
+
+    home_stats = df_finished[df_finished['home_clean'] == home_clean]
     if home_stats.empty: return None
     home_scored_avg = media_ponderada(home_stats, 'home_goals')
     home_conceded_avg = media_ponderada(home_stats, 'away_goals')
 
-    away_stats = df_finished[df_finished['away_team'] == away_team]
+    away_stats = df_finished[df_finished['away_clean'] == away_clean]
     if away_stats.empty: return None
     away_scored_avg = media_ponderada(away_stats, 'away_goals')
     away_conceded_avg = media_ponderada(away_stats, 'home_goals')
@@ -129,7 +109,7 @@ def get_match_predictions(league_code: str, home_team: str, away_team: str, matc
     home_attack_strength = home_scored_avg / league_avg_home_goals
     away_defense_strength = away_conceded_avg / league_avg_home_goals
     away_attack_strength = away_scored_avg / league_avg_away_goals
-    home_defense_strength = home_conceded_avg / league_avg_away_goals
+    home_defense_strength = away_conceded_avg / league_avg_away_goals
 
     home_expected_goals = home_attack_strength * away_defense_strength * league_avg_home_goals
     away_expected_goals = away_attack_strength * home_defense_strength * league_avg_away_goals
