@@ -7,16 +7,22 @@ import gcsfs
 import pyarrow.dataset as ds
 from scipy.stats import poisson
 from src.logging_config import logger
+import streamlit as st
 
 def get_gcs_token():
-    """Identifica automaticamente se está na nuvem (Streamlit Secrets) ou local (JSON)"""
+    """Identifica o token de acesso (Nuvem ou Local) sem gerar falsos positivos."""
     try:
-        import streamlit as st
         if "gcp_service_account" in st.secrets:
             return dict(st.secrets["gcp_service_account"])
     except Exception:
         pass
-    return os.getenv("GOOGLE_APPLICATION_CREDENTIALS", "google_credentials.json")
+    
+    caminho_local = os.getenv("GOOGLE_APPLICATION_CREDENTIALS", "google_credentials.json")
+    if os.path.exists(caminho_local):
+        return caminho_local
+        
+    # Se não há token válido, tenta acesso anônimo para evitar um crash por passar string inválida
+    return 'anon'
 
 # =====================================================================
 # 1. CONSULTAS OTIMIZADAS (DATA LAKE)
@@ -38,8 +44,7 @@ def query_hive_standings(league_code: str = None) -> pd.DataFrame:
 
 def query_hive_matches(league_code: str = None) -> pd.DataFrame:
     """
-    Leitura isolada e ultrarrápida: pré-filtra os arquivos pela liga para evitar colisão 
-    de esquemas entre PL e BSA, mantendo a velocidade paralela do PyArrow Dataset.
+    Leitura blindada que não engole erros, exibindo falhas de permissão ou caminho direto na tela.
     """
     try:
         token = get_gcs_token()
@@ -47,28 +52,27 @@ def query_hive_matches(league_code: str = None) -> pd.DataFrame:
         bucket_path = "futebol-datalake-global-analytics-2026/data/gold/matches"
 
         # 1. Mapeia todos os arquivos reais no bucket
-        all_files = fs.glob(f"{bucket_path}/**/*.parquet")
-        if not all_files:
-            logger.warning("Nenhum arquivo encontrado no bucket.")
-            return None
+        todos_arquivos = fs.glob(f"{bucket_path}/**/*.parquet")
+        if not todos_arquivos:
+            st.error(f"🚨 Nenhum arquivo Parquet encontrado no caminho: {bucket_path}. O Bucket existe e o app tem permissão para ler?")
+            st.stop()
 
-        # 2. Separa cirurgicamente apenas os arquivos da liga solicitada
-        target_files = []
+        # 2. Separa os arquivos da liga solicitada
         if league_code:
-            codigo = league_code.upper()
-            target_files = [f for f in all_files if f"league_code={codigo}" in f.upper()]
+            alvo = league_code.upper()
+            arquivos_liga = [f for f in todos_arquivos if alvo in f.upper()]
         else:
-            target_files = all_files
+            arquivos_liga = todos_arquivos
 
-        if not target_files:
-            logger.warning(f"Histórico não encontrado para a liga: {league_code}")
-            return None
+        if not arquivos_liga:
+            st.error(f"🚨 Acesso ao Data Lake concluído, mas nenhum arquivo encontrado para a liga '{league_code}'.")
+            st.stop()
 
-        # 3. Leitura C++ nativa e exclusiva da liga (sem conflitos com o resto do Data Lake)
-        dataset = ds.dataset(target_files, format="parquet", filesystem=fs)
+        # 3. Leitura C++ nativa sem conflitos de esquema particionado vs arquivo plano
+        dataset = ds.dataset(arquivos_liga, format="parquet", filesystem=fs)
         df = dataset.to_table().to_pandas()
 
-        # 4. Restaura a coluna de identificação caso tenha sido removida pelo particionamento de pastas
+        # 4. Restaura a coluna de identificação caso o particionamento de pastas tenha removido
         if league_code and 'league_code' not in df.columns:
             df['league_code'] = league_code.upper()
 
@@ -80,8 +84,10 @@ def query_hive_matches(league_code: str = None) -> pd.DataFrame:
         return df
         
     except Exception as e:
-        logger.error(f"Erro fatal ao ler matches do GCS: {e}")
-        return None
+        # ISSO VAI MOSTRAR A CAUSA RAIZ EXATA NA TELA DO APLICATIVO EM UMA CAIXA VERMELHA
+        st.error(f"🚨 ERRO CRÍTICO AO LER O DATA LAKE:\n\n{str(e)}")
+        st.info("Por favor, tire um print ou copie esse erro e envie para descobrirmos se foi bloqueio de autenticação ou quebra de caminho.")
+        st.stop()
 
 # =====================================================================
 # 2. MOTOR ESTATÍSTICO DE POISSON VETORIZADO
