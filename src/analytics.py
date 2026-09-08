@@ -23,25 +23,15 @@ def query_hive_standings(league_code: str = None) -> pd.DataFrame:
 def query_hive_matches(league_code: str = None) -> pd.DataFrame:
     try:
         caminho_base = os.path.join("data", "gold", "matches")
+        caminho_global = os.path.join(caminho_base, "**", "*.parquet")
         
-        if league_code:
-            codigo = league_code.upper()
-            caminho_particionado = os.path.join(caminho_base, f"league_code={codigo}", "**", "*.parquet")
-            
-            try:
-                query = f"SELECT *, '{codigo}' as league_code FROM read_parquet('{caminho_particionado}', union_by_name=True)"
-                df = duckdb.query(query).to_df()
-            except Exception:
-                df = pd.DataFrame()
-                
-            if df.empty:
-                caminho_global = os.path.join(caminho_base, "**", "*.parquet")
-                query = f"SELECT * FROM read_parquet('{caminho_global}', union_by_name=True) WHERE league_code = '{codigo}'"
-                df = duckdb.query(query).to_df()
-        else:
-            caminho_global = os.path.join(caminho_base, "**", "*.parquet")
-            query = f"SELECT * FROM read_parquet('{caminho_global}', hive_partitioning=1, union_by_name=True)"
-            df = duckdb.query(query).to_df()
+        # Leitura global e direta de todos os parquets de partidas para blindar contra falhas de particionamento no GCS
+        query = f"SELECT * FROM read_parquet('{caminho_global}', union_by_name=True)"
+        df = duckdb.query(query).to_df()
+        
+        if league_code and not df.empty:
+            if 'league_code' in df.columns:
+                df = df[df['league_code'].str.upper() == league_code.upper()]
 
         if not df.empty and 'utc_date' in df.columns:
             df['utc_date'] = pd.to_datetime(df['utc_date'], errors='coerce')
