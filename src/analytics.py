@@ -3,35 +3,60 @@ import math
 import numpy as np
 import duckdb
 import pandas as pd
+import gcsfs
+import pyarrow.dataset as ds
 from scipy.stats import poisson
 from src.logging_config import logger
 
-def query_hive_standings(league_code: str = None) -> pd.DataFrame:
-    parquet_path = os.path.join("data", "gold", "standings", "**", "*.parquet")
-    query = f"SELECT * FROM read_parquet('{parquet_path}', hive_partitioning=1, union_by_name=True)"
-    
-    if league_code:
-        query += f" WHERE league_code = '{league_code.upper()}'"
-    query += " ORDER BY points DESC, goalDifference DESC"
-    
+def get_gcs_filesystem():
+    """Helper para autenticar no GCS tanto localmente quanto no Streamlit Cloud."""
+    token = None
     try:
+        import streamlit as st
+        if "gcp_service_account" in st.secrets:
+            token = dict(st.secrets["gcp_service_account"])
+    except Exception:
+        pass
+
+    if not token:
+        token = os.getenv("GOOGLE_APPLICATION_CREDENTIALS", "google_credentials.json")
+    
+    return gcsfs.GCSFileSystem(token=token)
+
+def query_hive_standings(league_code: str = None) -> pd.DataFrame:
+    try:
+        fs = get_gcs_filesystem()
+        bucket_path = "futebol-datalake-global-analytics-2026/data/gold/standings"
+        
+        # Conecta o DuckDB diretamente ao Data Lake via PyArrow
+        dataset = ds.dataset(bucket_path, format="parquet", filesystem=fs, partitioning="hive")
+        
+        query = "SELECT * FROM dataset"
+        if league_code:
+            query += f" WHERE league_code = '{league_code.upper()}'"
+        query += " ORDER BY points DESC, goalDifference DESC"
+        
         return duckdb.query(query).to_df()
     except Exception as e:
-        logger.error(f"Erro DuckDB (Standings): {e}")
+        logger.error(f"Erro DuckDB GCS (Standings): {e}")
         return None
 
 def query_hive_matches(league_code: str = None) -> pd.DataFrame:
     try:
-        caminho_base = os.path.join("data", "gold", "matches")
-        caminho_global = os.path.join(caminho_base, "**", "*.parquet")
+        fs = get_gcs_filesystem()
+        bucket_path = "futebol-datalake-global-analytics-2026/data/gold/matches"
         
-        # Leitura global e direta de todos os parquets de partidas para blindar contra falhas de particionamento no GCS
-        query = f"SELECT * FROM read_parquet('{caminho_global}', union_by_name=True)"
+        # Lê o diretório do GCS como um dataset do PyArrow
+        dataset = ds.dataset(bucket_path, format="parquet", filesystem=fs)
+        
+        # O DuckDB lê a variável 'dataset' diretamente da memória, buscando da nuvem
+        if league_code:
+            codigo = league_code.upper()
+            query = f"SELECT * FROM dataset WHERE league_code = '{codigo}'"
+        else:
+            query = "SELECT * FROM dataset"
+            
         df = duckdb.query(query).to_df()
-        
-        if league_code and not df.empty:
-            if 'league_code' in df.columns:
-                df = df[df['league_code'].str.upper() == league_code.upper()]
 
         if not df.empty and 'utc_date' in df.columns:
             df['utc_date'] = pd.to_datetime(df['utc_date'], errors='coerce')
@@ -40,7 +65,7 @@ def query_hive_matches(league_code: str = None) -> pd.DataFrame:
         return df
 
     except Exception as e:
-        logger.error(f"Erro fatal do DuckDB (Matches): {e}")
+        logger.error(f"Erro fatal do DuckDB GCS (Matches): {e}")
         return None
 
 def get_match_predictions(league_code: str, home_team: str, away_team: str, match_date: str = None, historical_df: pd.DataFrame = None) -> dict:
